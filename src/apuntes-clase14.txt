@@ -1,0 +1,97 @@
+Mongoose (23/05/2024)
+
+Mongoose: Librería para trabajar todo lo de MongoDB desde JavaScript.
+(También podría hacerse desde vanilla)
+
+Diferentes tipos de clientes de bases de datos:
+
+CLI: Command Line Interface (Trabajar con consola)
+
+GUI: Graphical User Interface (Trabajar con un programa con interfaz de usuario, como en Compass)
+
+Cliente Web: El Front-End se conecta a la base de datos (como en el curso de React, a Firebase)
+
+App: Es nuestro caso, el backend va a consumir la base de datos. El front se comunica con el back por medio de la API, y el back con la base de datos de MongoDB.
+
+Realmente todos son nuestros casos lol, cuando trabajamos con Compass, somos clientes CLI y GUI, cuando trabajamos desde JavaScript, clientes App, y cuando subamos nuestra base de datos a un servidor, clientes web.
+
+Atlas: Servicio para darnos acceso a servidores de bases de datos de MongoDB.
+
+En Atlas:
+
+-Network Access: Configurar desde que IP un cliente puede consumir la base de datos, por ahora, 0.0.0.0/0, para que cualquiera pueda.
+-Database Access: Crear un usuario, tiene que ser Atlas admin.
+
+Siempre que se puedan traer las osas ya filtradas, se hace. Debemos aprovechar la potencia del motor de bases de datos.
+
+Uso de Mongoose
+
+npm install mongoose
+
+import mongoose from "mongoose";
+
+Para conectar mongoose a nuestra aplicación, podemos crear o un objeto de conexión, o un string de conexión, esto en nuestro httpserver (el que escucha el puerto principal).
+
+Por objeto: 
+const connectionObject = {
+    host: "direccion.com",
+    user: "Iván",
+    port: 1051,
+    password: "Bestplayer"
+};
+
+Por string:
+mongoose.connect("mongodb://localhost:27017/las_chicas");
+
+
+Si el servidor no fuera abierto...
+"user:contraseña@mongodb://localhost:27017/las_chicas" ("@", universalmente significa "en", como "dirección juancitoperez en gmail.com").
+mongodb+srv://ivan_ssiles:<password>@codercluster.2hyzkao.mongodb.net/
+
+Modelo: Cómo es una colección.
+
+Un modelo se organiza en esquemas. Ej:
+
+import mongoose from "mongoose";
+
+const userSchema = new mongoose.Schema({
+    first_name: String,
+    last_name: String,
+    email: {
+        type: String,
+        unique: true
+    } (Si queremos especificar varios detalles, se hace en forma de objeto).
+});
+
+export const userModel = mongoose.model("users", userSchema); (userModel ya está listo para funcionar, en cambio, userSchema, es el cuerpo de userModel. "users" es la colección a la que apunta).
+
+Forma del profe:
+
+import mongoose from 'mongoose';
+
+mongoose.pluralize(null);
+
+const collection = 'users';
+
+const schema = new mongoose.Schema({
+    nombre: { type: String, required: true },
+    email: { type: String, required: true },
+    password: { type: String, required: true },
+    role: { type: String, enum: ['admin', 'premium', 'user'], default: 'user' }
+});
+
+const model = mongoose.model(collection, schema);
+
+export default model;
+
+en schema: role: { enum: ["admin", "premium", "user"], default: "user"} (Es decir, sólo puede ser tres strings distintos, y si no le paso nada, va a ser user).
+
+En donde usamos las rutas, importamos los modelos.
+
+Entonces, resumiendo, para jugar con mongoose precisamos realizar tres pasos:
+
+-Conectar con mongoose.connect(url) en el httpserver, es decir en la instancia de express que escucha nuestro puerto
+
+-Crear los modelos necesarios para nuestras colecciones en la base de datos.
+
+-En los archivos de rutas, importamos mongoose y lo trabajamos donde normalmente jugaríamos con los archivos, pero de forma asíncrona; ahora, la permanencia de datos depende de databases y no de archivos.

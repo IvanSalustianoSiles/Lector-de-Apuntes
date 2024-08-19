@@ -1,0 +1,44 @@
+Mongo Avanzado II (22/05/2024)
+
+Aggregation
+Método organizado de realizar encadenar varias tareas consecutivas.
+Esto en distintas instancias (stages)
+La línea de stages se llama aggregation pipeline
+
+El documento resultante de un stage es el input del stage siguiente.
+Stages principales:
+-Count (cuenta los documentos actuales)
+-Group (Agrupa los documentos según un criterio, cada grupo tiene su id)
+-Limit (Limita la cantidad de documentos que saldrán de ese stage)
+-Lookup (Permite realizar un "left join", osea una combinación de campos, con otra colección)
+
+Ejemplo:
+"   const users = await usersModel.aggregate([
+    {$match: {role: "premium"}},
+    {$group: {_id: "$region", totalGrade: {$sum: "$grade"}}}
+]);"
+
+totalGrade es una propiedad temporal, creada a partir de la consulta, mas sin embargo yo puedo utilizarla como base, como input del siguiente stage.
+
+Extra: "$merge : {
+    into: "reports"
+}"
+Tiene que ir al final si se utiliza, consiste en un stage que reune todo los anteriores y los guarda en una nueva colección.
+
+Paginación
+
+Podríamos hacerla simplemente con .find().skip() y .find().limit(), pero no sería muy cómodo
+
+Mongoose Paginate
+-docs: Documentos devueltos de la página
+-totalDocs: Documentos totales de la consulta
+-limit: Límite de resultados por página
+-page: Página actual en la que nos encontramos
+-totalPages: Páginas totales que pueden ser solicitadas en la búsqueda.
+-hasNextPage: Indica si es posible avanzar a una página siguiente, si hay página después.
+-nextPage: Página siguiente en la búsqueda.
+-hasPrevPage: Indica si es posible retroceder a una página anterior, si hay una página atrás.
+-prevPage: Página anterior en la búsqueda.
+-pagingCounter: Número de documento en relación a la página actual.
+
+Ventaja: Se lo podemos pasar al frontend y arma los botones que quiere.

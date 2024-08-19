@@ -1,0 +1,164 @@
+Passport Avanzado (10/06/2024)
+
+Refrescando: Passport nos da varias opciones de autenticación.
+
+Nosotros podemos recibir un registro de usuario por parte de terceros, y no necesariamente que se registre con nosotros.
+
+JWT
+
+Encriptar la información del usuario, enviársela al cliente por medio de un token.
+El cliente devuelve el token por cada consulta con la información del usuario.
+
+Ahora en lugar de guardar la información del usuario en sesiones desde el back,
+Le enviamos al front una token con la información del usuario, con una "credencial",
+El cliente verá cómo la guarda el usuario, sea por medio de cookies por ejemplo, y la enviará de nuevo por medio de un endpoint (fetching de datos, probablemente), cuando necesite autorización.
+
+¿Cómo se trabaja con la librería jsonwebtoken?
+
+Los tokens pueden ir en las cookies, en las URLs mediante queries, o en los headers de las solicitudes.
+
+En los endpoints, ahora iríamos teniendo esto:
+
+router.post("/jwtlogin", verifyRequiredBody(["email", "password"]), passport.authenticate("login", { failureRedirect: `/pplogin?error=${encodeURI("Usuario y/o clave no válidos.")}` }), async (req, res) => {
+    try {
+      const token = createToken(req.user, '24h'); Creamos el token, con una función nuestra de utils.js
+      res.status(200).send({
+        origin: config.SERVER,
+        payload: "Usuario autenticado",
+        token: token
+      });
+      // res.redirect("/products");
+    } catch (error) {
+      res.status(500).send("Session error");
+    }
+  }
+);
+router.get("/adminByjwt", verifyToken, async (req, res) => {
+}); De acá lo único que me importa por ahora es mostrar cómo ahora usamos verifyToken como middlware.
+
+createToken y verifyToken en utils.js:
+
+"export const createToken = (payload, duration) => jwt.sign(payload, config.SECRET, { expiresIn: duration}); 
+
+export const verifyToken = (req, res, next) => {
+
+}" Pronto veremos verifyToken
+
+Todo esto a partir de la librería jsonwebtoken, y también usaremos passport-jwt
+
+En utils.js, creamos los métodos createToken y verifyToken, sin embargo, es necesario rescatar cómo se hace con la librería jsonwebtoken:
+
+Para crear un token:
+"jwt.sign(payload, config.SECRET, { expiresIn: duration})"
+Es decir, se firma el token, se ingresa su payload, su secret y sus options, como cuándo expira (por eso los parámetros de createToken son payload y duration)
+
+El verifyToken:
+
+"export const verifyToken = (req, res, next) => {
+  const myToken = req.headers.authorization
+    ? req.headers.authorization.split(" ")[1] // En los headers, en authorization, la segunda palabra es el token, así que .split() y del array la segunda posición)
+    : undefined;
+
+  if (!myToken)
+    return res
+      .status(401)
+      .send({ origin: config.SERVER, payload: "Token no encontrado." });
+
+  jwt.verify(myToken, config.SECRET, (err, credentials) => { // De acá lo interesante de rescatarr es este método de jwt: jwt.verify(token, secret, (err, credentials) => {})
+    if (err)
+      return res
+        .status(403)
+        .send({ origin: config.SERVER, payload: "Token inválido." });
+    req.user = credentials;
+    next();
+  });
+};"
+
+Ahora, ¿qué formas tiene el cliente de rescatar esta información?
+
+Hay tres formas habituales:
+
+1-Por medio de los headers, por ejemplo, primero guardando en cookies y después enviándolo en un fetch.
+
+En un fetch, se enviaría desde el cliente un header "authorization" con el token, precedido de la palabra "Bearer".
+
+Desde el cliente:
+
+fetch("/api/auth/admin", {
+    body: JSON.stringify(obj),
+    headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+    }
+})
+
+Ese "obj", que contiene el token, podría venir de cookies, de localstorage, etc.
+
+Localstorage no es del todo seguro, debido a que puede darse un ataque del tipo XSS (Cross Site Scripting) y robarse la información. Podemos solucionar esto de dos formas:
+1- Haciendo un header personalizado que proteja la información.
+2- Guardando la información en cookies.
+
+Con cookies:
+
+En lugar de hacer res.send(), haríamos:
+
+"res.cookie("tokenCookie", miToken, {
+maxAge: 60*60*1000,
+httpOnly: true // Esto genera que la cookie sólo exista en el proceso de la petición HTTP, por ende, no se pueda acceder fácilmente.
+})
+.send({msg: "Logged in!"})
+
+Esto guardaría automáticamente la información en el navegador, y ya no necesitaría ser almacenada en el local storage.
+
+res.cookie: Le notifica al navegador que tiene que guardar ese paquete de datos.
+
+Problema: Nuestro verifyToken contempla el envío de tokens por medio de headers de peticiones de clientes.
+
+Ahora vamos a trabajar la autenticación de tokens con passport, como trabajamos otras autenticaciones.
+
+En nuestro js de passport strategies:
+
+import jwt from "passport-jwt";
+const jwtStrategy = jwt.Strategy;
+const jwtExtractor = jwt.ExtractJwt; //Passport utilza este método, ".ExtractJwt", para parsear las cookies, ya que no lo hace de forma directa.
+
+Es necesario configurar este extractor, ya que passport (o passport-jwt) no tiene forma de saber automáticamente si nosotros queremos extraer los tokens desde una cookie, desde los headers de una petición o del mismo body.
+
+Si configuramos todo bien, el contenido de nuestro token se encontrará en "jwt_payload".
+
+Para eso, empezamos creando la función cookieExtractor que, de existir req y req.cookies (osea, de haber cookies) guardará en la variable token el token de la cookie.
+
+"const cookieExtractor = (req) => {
+  let token = null;
+  if (req && req.cookies) token = req.cookies["tokenCookie"];
+
+  return token;
+}
+
+Ahora, ¿cómo sería la estrategia?
+
+  "passport.use("jwtlogin", new jwtStrategy(
+    {
+      jwtFromRequest: jwtExtractor.fromExtractors([cookieExtractor]), // Le pedimos a passport usar como extractor nuestro cookieExtractor, en el array de extractores
+      secretOrKey: config.SECRET // Nuestro secret
+    },
+    async (jwt_payload, done) => {
+      try {
+        return done(null, jwt_payload);
+      } catch (error) {
+        return done("Error: "+error);
+      }
+    }
+  ));"
+
+  Ahora, ya no usaremos nuestra función "verifyAdmin", sino que en el endpoint, posicionaremos como middleware:
+
+  "router.get("/adminByjwt", passport.authenticate("jwtlogin", { session: false }), async (req, res) => {..."
+
+  El "session: false" es para deshabilitar el uso de sesiones específicamente en este endpoint, ya que trabajamos con tokens. Con deshabilitarlo en general desde app.js también estaría, pero aún tenemos varios endpoints con sessions.
+
+  401. Falta autenticación (ejemplo, no tiene token)
+
+  403. Falta autorización (ejemplo, envió token pero no es válido)
+
+  JWT.io - Página oficial de JWT, puedo decodificar mis tokens y ver mis usuarios.

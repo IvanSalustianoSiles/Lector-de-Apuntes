@@ -1,0 +1,144 @@
+Estrategia de autenticación por terceros + JWT (05/06/2024)
+
+Sessions vs JWT (Tokens), para manejo de datos temporales.
+
+Métodos serialize y deserealize en strategies: Son de uso interno de passport para manejo de sesiones
+Son necesarios para que funcione el manejo de sessions con passport.
+
+Passport trabaja con done, callback que devuelve o error o el objeto si está todo ok.
+
+Passport, para las estrategias de autenticación, utiliza password y username, entonces, si una de las dos no corresponde con tal nombre hay que aclarar:
+{usernameField: 'email'}
+Acá le estaríamos diciendo que tome al userNameField como lo que venga en el campo 'email' del req.body
+
+Passport, aparte de permitirnos trabajar con autenticación de terceros de manera más accesible, también nos impulsa a organizar mejor el código y separar por un lado las autenticaciones y simplemente consumirlas en los endpoints a modo de middlewares.
+
+Con GitHub, o en general con la autenticación por terceros, el tercero nos devuelve un perfil para cargar en la base de datos, sin necesidad de que el usuario tenga que registrarse.
+
+En el caso de GitHub y muchos otros, se trabaja con una callback URL, un enlace al que el tercero redirige el usuario sea con una información de error o con una ventana luego de una aprobación del paquete de datos.
+
+
+Mi endpoint -> Servicio de terceros, que corrobora -> Otro endpoint mío que tengo configurado, el callback URL (cuando termines, volvé acá y entregá lo que tengas, sea un error o no).
+
+
+
+Nosotros tenemos que activar en nuestra cuenta de GitHub que puedan realizarse este tipo de autenticaciones.
+
+GitHub, para su sistema de autenticación, siempre pide un ClientID, un secret, y un callbackURL.
+
+El ClientID y el secret le permite a GitHub saber cuál es la app a la que se va a dirigir el sistema de autenticación.
+
+Y luego, el callbackURL: ¿A dónde entrega los datos GitHub?
+
+1-Registrarse como desarrollador de app del sitio y crear aplicación interna.
+Settings -> Dev Settings -> New GitHub App -> 
+
+Homepage URL: Por ahora, el localhost (http://localhost:8080)
+
+callbackURL: http://localhost:8080/api/sessions/ghlogincallback
+
+Account Permissions -> Email Adresses -> read-only, por si luego hay un problema con el usuario que no puede ver algo debido a que no tiene acceso al mail.
+
+Desactivar WebHook
+
+Ahora tenemos nuestro ClientID y generamos el secret o private key.
+
+2-Configuro el servidor donde se utilza la aplicación.
+
+Hasta hora usamos passport, y passport-local para nuestras estrategias locales. Ahora instalamos passport-github2 para crear nuestra estrategia de autenticación con GitHub.
+
+npm install passport-github2
+
+'passportjs.org/packages/': Página oficial de passport donde tenemos toda la documentación referente a las diversas estrategias de autenticación mediante varios terceros.
+
+Obviamente, creamos una estrategia de GitHub, pero también dos endpoints get, uno para traer la autenticación de passport (nos redirecciona a GitHub), y esta autenticación te devuelve al segundo endpoint, el callbackurl, que es get porque trae la información de GitHub, y finalmente en nuestro endpoint nos redirecciona a profile.
+
+Resolución:
+
+router.get("/ghlogin", passport.authenticate("ghlogin", { scope: ["user"] }), async (req, res) => {
+}
+);
+
+Obviamente también configurar el handlebars (front) para que el botón lleve a "api/sessions/ghlogin", porque ahí redirecciona a GitHub.
+
+3-Configuro un callbackURL para el servidor.
+
+router.get("/ghlogincallback", passport.authenticate("ghlogin", { failureRedirect: `/login?error=${encodeURI("Error de autenticación con GitHub")}`}), async (req, res) => {
+    try {
+      req.session.user = req.user;
+      req.session.save((error) => {
+        if (error)
+          return res.status(500).send({
+            origin: config.SERVER,
+            payload: null,
+            error: "Error almacenando datos de sesión.",
+          });
+        res.redirect("/profile");
+      });
+    } catch (error) {
+      return res
+        .status(500)
+        .send({ origin: config.SERVER, payload: null, error: error.message });
+    }
+  }
+);
+
+JWT (Json Web Tokens)
+
+Los tokens son básicamente como "credenciales" de usuario.
+
+A diferencia de las sessions, no se manejan únicamente del lado del servidor.
+
+Creamos los tokens desde el servidor, se los entregamos al cliente, y el cliente lo devuelve cada vez que tenga que autenticarse.
+
+Todo esto por medio de los headers de los fetch en front. Ahí se envían los tokens de usuario, y es donde va a revisar el servidor.
+
+Esto tiene cierta ventaja, pues delegamos cierta responsabilidad al cliente.
+
+Las sessions generan una carga adicional al código, pues son llamadas constantes al servidor.
+
+El front evidentemente puede elegir guardar los tokens incluso en cookies, en el navegador.
+
+npm install jsonwebtoken
+
+Firmaremos los tokens, será como en bcrypt para el hasheo de contraseñas o similar. Expiran
+
+En vez de guardar una session en req.session.user, crearíamos un token y se lo enviaríamos al usuario.
+
+Los tokens pueden ir en las cookies, en las URLs mediante queries, o en los headers de las solicitudes.
+
+En los endpoints, ahora iríamos teniendo esto:
+
+router.post("/jwtlogin", verifyRequiredBody(["email", "password"]), passport.authenticate("login", { failureRedirect: `/pplogin?error=${encodeURI("Usuario y/o clave no válidos.")}` }), async (req, res) => {
+    try {
+      const token = createToken(req.user, '24h'); Creamos el token, con una función nuestra de utils.js
+      res.status(200).send({
+        origin: config.SERVER,
+        payload: "Usuario autenticado",
+        token: token
+      });
+      // res.redirect("/products");
+    } catch (error) {
+      res.status(500).send("Session error");
+    }
+  }
+);
+router.get("/adminByjwt", verifyToken, async (req, res) => {
+}); De acá lo único que me importa por ahora es mostrar cómo ahora usamos verifyToken como middlware.
+
+createToken y verifyToken en utils.js:
+
+"export const createToken = (payload, duration) => jwt.sign(payload, config.SECRET, { expiresIn: duration}); 
+
+export const verifyToken = (req, res, next) => {
+
+}" Pronto veremos verifyToken
+
+Todo esto a partir de la librería jsonwebtoken, y también usaremos passport-jwt
+
+Ahora, ¿qué formas tiene el cliente de rescatar esta información?
+
+Hay tres formas habituales:
+
+1-Por medio de los headers, por ejemplo, primero guardando en cookies y después enviándolo en un fetch.
+

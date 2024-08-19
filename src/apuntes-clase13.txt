@@ -1,0 +1,76 @@
+CRUD en MongoDB (08/05/2024)
+
+Lista de comandos de consulta de MongoShell:
+-show dbs
+-use <database>
+-show collections
+-drop <collection>
+-db.createColllection("<collection>")
+-db.<collection>.insertOne({...})
+-db.<collection>.insertMany([...])
+-db.<collection>.updateOne({...})
+-db.<collection>.deleteOne({...})
+-db.<collection>.deleteMany([...])
+-db.<collection>.find({...})
+-db.<collection>.findOne({...})
+-db.<collection>.findOneAndDelete({...})
+-db.<collection>.findOneAndUpdate({...})
+-db.<collection>.estimatedDocumentCount() (Cuenta, según la metadata, un estimado de documentos. Más eficiente)
+-db.<collection>.countDocuments(opt) (Cuenta documentos a partir de una condición)
+
+"mockaroo.com", generador de mocks.
+
+Operadores para filtros de Query:
+-$and
+-$or
+-$nor
+-$lt
+-$lte
+-$gt 
+-$gte
+-$ne
+-$eq
+
+Ejemplo:
+
+Quiero los alumnos menores de cuarenta años.
+
+db.students.find({age: {$lt: 40}})
+
+Otros ejemplos:
+
+db.casas.find($or: [{"color": "rojo"}, {"color": "verde"}]) (incluyente)
+db.casas.find($nor: [{"color": "rojo"}, {"color": "verde"}]) (excluyente)
+
+Expresiones regulares (Regex)
+
+Patrones para validar formatos.
+
+Ejemplo:
+
+db.students.find({name: /^M/}) (Aquellos estudiantes cuyo nombre comienza con "M").
+
+Sort
+
+db.<collection>.find().sort({val1: 1, val2: -1})
+
+Le estamos diciendo que ordene de forma ascendente, pero que si encuentra dos iguales, podemos ordenar bajo otro criterio.
+
+Skip y Limit
+
+Skip(): A partir de dónde
+Limit(): Cuántos
+
+Sirven para hacer paginaciones. Por ejemplo, Mercado Libre no trae todos sus productos sólo para la pantalla principal, a pesar de que no hayan filtros por parte del usuario; sería ineficiente.
+
+Update
+
+db.<collection>.updateOne(query, update, option) (osea, qué actualizar, operador para saber cómo, y filtros)
+
+db.students.updateOne({_id: objectId("wrhwgwr")}, {$set: {gender: "male"}} )
+$set, $unset, $rename, $inc, $mul, $min, $max, etc.
+
+
+
+
+

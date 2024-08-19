@@ -1,0 +1,11 @@
+Ruteo avanzado y estrategias avanzadas de autorización (12/06/2024)
+
+Repasando, tres formas de que vuelvan desde el cliente los tokens:
+
+-En headers
+-En cookies
+-En queries
+
+Entonces, modificamos nuestro método antiguo de verifyToken, para contemplar todas esas posibilidades:
+
+21:02

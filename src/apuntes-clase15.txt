@@ -1,0 +1,97 @@
+Primera práctica integradora (15/05/2024)
+
+En esta clase no se ven temas nuevos, es de práctica. Vamos a integrar todos los conocimientos en conjunto.
+
+-Vamos a arrancar un proyecto de cero e intentar integrar todo.
+
+-Clases
+-Express y modelo request/response
+-Router y Multer
+-Handlebars
+-MongoDB y Mongoose
+
+Etapa 1:
+1-Inicializamos proyecto npm vacío.
+(Me paro en la carpeta que quiero que sea la general, npm init -y)
+
+2-Creamos carpeta src con app.js y config.js.
+
+3-Habilitamos "type":"module" en package.json.
+
+4-Instalamos dependencias:
+    - Express
+    - Express-Handlebars
+    - Mongoose
+    - Multer
+    - Socket.io 
+(npm install express express-handlebars mongoose multer socket.io)
+
+5- Habilitamos express, activando json() y urlencoded().
+(
+    import express from "express";
+    import config from "./config.js";
+    const app = express();
+    const expressInstance = app.listen(config.PORT, async() => {
+        console.log(`App active en el puerto ${config.PORT}`);
+    });
+    app.use(express.json()); (Para parsear json que nos llegue)
+    app.use(express.urlencoded({extended: true})); (Poder interpretar correctamente los URL, incluyendo req.query, req.params, etc.)
+)
+
+Repasar skills.
+
+Express:
+
+-Saber definir una carpeta src para tu proyecto.
+
+-Instalar Express con npm.
+
+-Importar express en nuestro archivo principal.
+
+-Comprender el modelo request - response y aplicarlo en nuestra app.
+
+-Poner a escuchar nuestro servidor en un puerto específico.
+
+-Configurar express para recibir jsons en las request.
+
+-Req.query, req.params y req.body.
+
+-Comprender formato y códigos de status para respuestas.
+
+(Clase 6 y 7 - Express).
+
+Etapa 2:
+
+-Agregar carpeta public (para contenidos estáticos).
+
+-Agregar carpeta routes con archivo para rutas de productos con CRUD vacío.
+
+-Importar y activar en app bajo /api/products.
+
+-Activar servicio estático de public.
+(app.use("/static", express.static(`${config.DIRNAME}/public`))
+
+-Habilitar Handlebars, recuperar plantillas y routes de views.
+(
+En app:
+    -app.engine("handlebars", handlebars.engine())
+    -app.set("views", "src/views");
+    -app.set("view engine", "handlebars");
+Creamos views con las plantillas.
+Ruta de views, renderizando las plantillas.
+)
+
+Análisis del DIRNAME (al fin, dios):
+
+Podríamos poner una ruta relativa, como src/public en vez de static, pero generalmente hay problemas.
+
+DIRNAME recupera la ruta en donde está ejecutándose la aplicación (osea, donde está app.js). 
+
+Vamos a trabajar nuestra base de datos online, con el servicio Atlas.
+
+MongoDB:
+
+-Importo Mongoose 
+-Hacemos asíncrona la escucha del puerto, y: await mongoose.connect(config.MONGO...)
+-Hacemos el model
+-Lo importamos en el archivo de rutas para trabajar.

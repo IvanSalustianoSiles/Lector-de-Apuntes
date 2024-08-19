@@ -1,0 +1,128 @@
+Autorización y Autenticación (03/06/2024)
+
+Passport - Para manejar autenticaciones (una alternativa).
+
+Siempre reservar una parte de la semana a probar herramientas nuevas.
+
+O manejamos sessions, o tokens.
+
+Autenticación vs Autorización
+
+Autenticación: Identificar usuario
+
+Autorización: Verificar nivel de usuario
+
+Status correctos:
+Todo funciona bien: 200
+Error de malformación de solicitud (ejemplo, no ingresaron password): 400
+Error de autenticación: 401
+Error de autorización: 403
+Error de no encontrado: 404
+Error general: 500
+
+Operador opcional:
+if (req.session.user?.role !== admin)
+Lo que estamos diciendo acá es lo mismo que:
+if (!req.session.user || req.session.user.role !== admin)
+
+Si no existe se corta y se lee el if, si existe continúa y analiza el rol
+
+npm install bcrypt passport passport-local
+
+bcrypt: Para el hasheo de passwords, encriptación de claves planas.
+
+passport y passport-loca: Para manejar diferentes tipos de autenticación.
+
+Jamás es recomendable almacenar claves planas en una base de datos. Por ende, realizamos un proceso de hash con bcrypt.
+
+Los procesos de hashing son irreversibles; no podemos obtener la clave plana a partir del hash.
+
+Bcrypt tiene su propio método compare() que nos permitirá evaluar si las contraseñas coinciden.
+
+En un utils.js:
+
+import bcrypt from "bcrypt";
+
+export const createHash = (password) => bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+
+export const isValidPassword = (user, password) => bcrypt.compareSync(password, user.password);
+
+Passport 
+
+Passport nos permite generar distintas estrategias de autenticación y autorización, tanto local como online (por ejemplo, "registrarse con GitHub")
+
+passportjs.org, página oficial para ver sistemas de autenticaciones.
+
+Passport siempre necesita un username y una password.
+
+Con "{usernameField: "email"}", podemos cambiar el username a un email.
+
+Se utiliza un callback "done": done(error, user)
+
+done(null) -> No hay error
+done(null, false) -> No hay error y el usuario no está disponible.
+
+Cada estrategia de passport es un middleware, por lo que se utiliza "passport.use()".
+
+Ejemplo de las slides:
+
+import passport from "passport";
+import local from "passport-local";
+import userService from "../models/User.js";
+import {createHash, isValidPassword} from "../utils.js";
+
+const LocalStrategy = local.Strategy;
+
+const initializePassport = () => {
+
+    passport.use("register", new LocalStrategy(
+        {passReqToCallback: true, usernameField: "email"},
+        async (req, username, password, done) => {
+            try {
+                let user = await userService.findOne({email: username});
+                if (user) {
+                    return done(null, false);
+                }
+                const newUser = {...req.body, password: createHash(password)};
+                let result = await userService.create(newUser);
+                return done(null, result);
+            } catch (error) {
+                return done("Error:"+error);
+            }
+        }
+    ))
+
+}
+export default initializePassport;
+
+En routes:
+
+(ejemplo login, no register):
+
+router.post("/pplogin", verifyRequiredBody(["email", "password"]), passport.authenticate("login", { failureRedirect: `/login?error=${encodeURI("Usuario y/o clave no válidos.")}` }), async (req, res) => {
+    try {
+      req.session.user = req.user;
+      req.session.save((error) => {
+        if (error)
+          return res
+            .status(500)
+            .send({
+              origin: config.SERVER,
+              payload: null,
+              error: "Error almacenando datos de sesión.",
+            });
+        res.redirect("/products");
+      });
+    } catch (error) {
+      res.status(500).send("Session error");
+    }
+  }
+);
+
+req.user trae done().
+
+Autenticación por terceros
+Para github:
+"https://github.com/settings/apps"
+
+

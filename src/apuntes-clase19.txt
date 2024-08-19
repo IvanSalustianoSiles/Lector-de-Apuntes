@@ -1,0 +1,48 @@
+Cookies, Sessions & Storage II (29/05/2024)
+
+Sesión: Ciclo de interacción entre un sitio y un cliente. 
+
+CookieParser: Nos permite trabajar el crude de las cookies desde el servidor, a pesar de que en verdad se trabajen en el cliente.
+
+Logout example:
+
+router.get("/logout", async (req, res) => {
+    try {
+      req.session.destroy((err) => {
+        if (err) return res.status(500).send({origin: config.SERVER, payload: "Error al ejecutar logout."})
+        res.status(200).send({origin: config.SERVER, payload: "Usuario desconectado."});
+      });
+    } catch {
+        res.status(200).send({origin: config.SERVER, payload: null, error: "Error de sesión."});
+    }
+});
+
+Vamos a agregar persistencia.
+
+npm install session-file-store
+
+En app:
+
+import FileStore from "session-file-store";
+
+const fileStorage = FileStore(session);
+
+Dentro de app.use(session({})):
+store: new fileStorage({path: "./sessions", ttl: 3600000, retries: 0})
+
+npm install connect-mongo, si queremos almacenar en MongoDB conectando con nuestras colecciones.
+
+Session Storage con Mongo Atlas.
+
+En lugar de lo anterior, se hace:
+
+import MongoStore from "connect-mongo";
+
+store: MongoStore.create({
+    mongoUrl: "mongodb+srv://silesivansalustiano:Coki2011@codercluster.n4kbrpc.mongodb.net/ecommerce",
+    mongoOptions: {useNewUrlParser: true, useUnifiedTopology: true},
+    ttl: 3600000
+})
+
+Es normal, dentro de la carpeta de 'sessions', insertar algún tipo de gestor de caducidad, que revise si quedan archivos viejos,
+Puesto que suele suceder que no se borran por factores externos a la lógica del código.

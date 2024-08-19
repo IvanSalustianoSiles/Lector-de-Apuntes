@@ -1,0 +1,54 @@
+Mongo Avanzado I (20/05/2024)
+DAO: Data Access Object (Para identificar rutinas de recuperación y manejo de datos. En este caso, de MongoDB)
+
+Repasito:
+DBAAS: Database as a service (Base de datos online, como servicio, ej: Atlas)
+Cliente CLI: Cliente que consume base de datos desde terminal
+Cliente UI: Cliente que consume base de datos desde una interfaz, como Compass
+Cliente Web: Cliente que consume base de datos desde la web, como con Atlas
+
+Teoría de indexación
+Compass ya te crea un índice, el índice único, el _id.
+Ya el _id nos provee un acceso más rápido a los documentos, que es, precisamente, el objetivo de un índice.
+Es preciso indexar, organizar la información, debido a que una base de datos más grande lo requiere.
+
+
+find().explain("executionStats")
+
+Manejo de índices
+Habilitamos un índice desde el model, para que, al filtrar una gran búsqueda (por ejemplo, entre 5000 usuarios) con el mismo criterio, se reduzca el tiempo de búsqueda.
+ej: "lastName: {type: String, required: true, index: true},"
+En el endpoint: "const process = await users.model.find({lastName: "Siles"})
+No usar demasiados índices, lo justo y necesario.
+
+Population:
+Anidar mediante referencias colecciones (por ejemplo, las mascotas de los usuarios, los carritos de los usuarios).
+Yo puedo definir a los carritos como propiedad de users en el model del mismo, o trabajar el model de los carritos poniendo una _user_id para enlazar ambas colecciones.
+Por dentro del carrito, además, tenemos products, que es un array que adentro tiene productos con una id (que viene de la colección de products) y quantity.
+
+Para poder realizar este enlazamiento, en el modelo que queramos enlazar (carritos), conectamos agregando una propiedad ref="users_index", diciendo a qué colección nos queremos enlazar.
+
+"_user_id: { type: mongoose.Schema.Types.ObjectId, required: true, ref="users_index" },"
+
+Luego, se tiene que trabajar desde el endpoint:
+"const cart = await cartsModel.find().populate({path: _user_id, model: usersModel}).lean();"
+Si trabajamos aparte un array, como products:
+
+"const cart = await cartsModel.find()
+.populate({path: _user_id, model: usersModel})
+.populate({path: "products._id", model: productsModel})
+.lean();"
+
+Populate como middleware (antes de la ejecución, desde el modelo)
+Esto se haría en el model, por ejemplo de los carritos, con un método de mongoose llamado pre().
+
+Ej:
+
+"Schema.pre("find", function () {
+    this.populate({path: "_user_id", model: usersModel})
+    .populate({path: "products._id", model: productsModel});
+});"
+
+Esto nos quiere decir que, cada vez que se ejecute el método find() de mongoose, sea en cualquier endpoint, primero se tendrá en cuenta que _user_id proviene de usersmodel y products._id de productsmodel.
+
+No confundir con el la propiedad ref, que tiene que tomar el nombre de la colección, y se aplica tanto si hacemos esto desde el endpoint como si lo hacemos desde el middleware en el model.

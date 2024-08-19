@@ -1,0 +1,50 @@
+MongoDB - Introducción (06/05/2024)
+
+Render:
+-New
+-Crear servidor estático
+-Build and deploy from a Git repository
+-Connect
+-Runtime: Node
+-Build command: npm install
+-Start command: app
+-En scripts, en mi json, "start": "node src/app"
+
+MongoDB - Base de datos no relacional (no-SQL).
+
+Problema principal: Persistencia de datos. Solución clásica: manejo de archivos.
+
+Problemas con archivos: 
+-Tenemos que actualizar todo el archivo cuando hacemos un cambio.
+-Tenemos que leer todo el archivo cuando queremos buscar un dato.
+-No hay protección si cometemos un error y borramos info.
+
+Bases de datos relacionales (SQL):
+-Bien organizadas, en tablas, y las tablas en registros. Los registros tienen una estructura de campos (ej: un registro es un usuario).
+-Estructura organizada y rígida.
+-Las tablas se relacionan.
+-Puedo realizar consultas a la base de datos y me devuelve información. Lenguaje de consultas muy estandar (SQL).
+
+Bases de datos no relacionales (no-SQL):
+-Mucho más flexibles, lo que brinda mayor accesibilidad a los datos.
+-Se organizan en colecciones, que se organizan en documentos (en formato key: value, como los objetos de JavaScript).
+-Acá entra MongoDB.
+
+GraphQL: Lenguaje unificado de consulta.
+
+MongoDB trabaja con BSON, formato similar a JSON y a los objetos JS, para bases de datos.
+
+
+Service o Deamon: Aplicación que corre de fondo, como precisamente un motor de base de datos, por ende, instalamos MongoDB como servicio.
+
+MONGOSH: Consola de MongoDB Compass, en ella podemos utilizar varios comandos específicos:
+show dbs: Te muestra las bases de datos.
+use <nombre de base de datos>: Nos movemos a trabajar con la base de datos, algo así como un cd
+db.products.find(): Una vez que ya estamos parados en la base de datos específica, para encontrar documentos en una colección.
+db.createColllection("users"): Crea colección en nuestra base de datos.
+db.<collection>.insertOne(): Crea un documento en una colección.
+db.<collection>.insertMany(): Crea varios documentos en una colección.
+En ambos métodos puedo directamente pegarles un JSON, el mismo array entero de objetos JSON; si es sólo un documento, es válido sólo el objeto.
+db.<collection>.deleteMany(): Elimina varios documentos en una colección. Si no paso criterios, osea, ({}), borra todo el contenido de la colección. "Trucate".
+Con drop, borro la colección en sí misma.
+db.<collection>.deleteOne(): Elimina un documento de la colección por criterio, por ejemplo: "db.products.deleteOne({_id: objectId(wgwrgwgwg)})".

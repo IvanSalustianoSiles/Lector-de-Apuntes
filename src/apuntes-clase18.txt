@@ -1,0 +1,174 @@
+Cookies, Sessions & Storage (27/05/2024)
+
+¿Cómo identificamos a los usuarios?
+
+Vamos a elegir cookies o sessions
+
+Cookies
+
+Pequeños paquetes de datos, fundamentalmente, para almacenar preferencias de los usuarios.
+Nombres de usuario, IDs de sesiones, preferencias de navegación. La información se almacena en el navegador.
+Ejemplos de preferencias: Modo oscuro, búsquedas recientes.
+
+Para no consultar continuamente al backend. Almacena por el cliente.
+
+No es para datos críticos, sensibles. (Tarjeta de crédito, por ejemplo).
+
+Se cierra el navegador y persisten. Mecanismo práctico para almacenar preferencias.
+
+Como se almacenan del lado del cliente, cuentan con espacio limitado.
+
+Podemos asignarles claves de seguridad y un tiempo de vida.
+
+npm install cookie-parser
+
+app.use(cookieParser()); (Conectamos cookieParser con express, recordemos que app es 'express()').
+
+Ahora podremos gestionar cookies en nuestras peticiones.
+
+Podemos hacer "res.cookies()" gracias a express para definir el contenido de una cookie, sin embargo, las cookies se crean del lado del cliente, nosotros solamente pasamos el contenido. 
+Le estamos diciendo al navegador "Guardá esto en una cookie".
+
+res.cookie('nombre', {opciones}, {configuración});
+
+Ej:
+res.cookie('mi-cookie','Alta galletita', {maxAge: 3600000}).send("Cookie");
+req.cookies() => Devuelve las cookies en el navegador. Esto en principio debería funcionar bien gracais al cookie-parser habilitado antes.
+
+res.clearCookie('mi-cookie');
+res.clearCookie('mi-cookie').send('Cookie removed.');
+
+Firmar las cookies para más seguridad:
+
+app.use(cookieParser(config.SECRET));
+res.cookie('mi-cookie','Alta galletita', {maxAge: 3600000, signed: true}).send("Cookie"); (Ahora la cookie está firmada)
+
+Para acceder a las cookies firmadas, es con 'req.signedCookies'.
+Son cookies que particularmente busco que el cliente no altere, por ende, devuelven false al ser alteradas;
+
+Si req.signedCookies me devuelve false, entonces el cliente alteró sus cookies.
+
+En pocas palabras, nosotros no podemos evitar que el usuario altere las cookies, sin embargo, podemos dejar una marca para saber si se alteraron o no.
+
+Ejemplo: Cargar usuario. En el post, recibiríamos los datos en el body, y le diríamos al navegador que los guarde en cookies pero parseado
+
+const user = req.body;
+res.cookie("coder-cookie", JSON.stringify(user), {maxAge: 3600000, signed: true});
+
+Y, en el get, deberíamos parsear al inverso:
+
+const data = JSON.parse(req.signedCookies["mi-cookie"]);
+res.status(200).send({origin: config.SERVER, payload: data});
+
+Dando identidad al cliente: Sessions.
+
+API Rest: Es stateless, no tiene estado: Cuando alguien hace una solicitud, sólo nos importa si está en el formato http correcto y listo. 
+Ni el cliente ni nosotros necesitamos contexto previo.
+
+npm install express-session, para gestionar usuarios.
+
+La información que se desee guardar, se hace desde el lado del servidor.
+
+Del lado del cliente, se crea un identificador único, para acceder a esa información desde el navegador.
+
+Los datos que se almacenen en session se borrarán al cerrar la ventana del navegador.
+
+req.session
+
+app.use(session({
+    secret: CONFIG_SECRET,
+    resave: true, (Si la sesión se desactiva, se mantendrá activa.)
+    saveUninitialized: true (Guardará cualquier sesión aunque esté vacía).
+}));
+
+Ahora vamos a tener disponible req.session disponible para trabajar en los endpoints.
+
+Lo más importante: Persiste entre solicitudes. Por ejemplo, con el contador de visualizaciones personales.
+
+Cookies: Almacenamiento del lado del navegador, para datos sensibles, puedo firmarlas
+Sessions: Se almacenan del lado del servidor. Le pasa un id al navegador que nosotros no necesitamos gestionar.
+Reinicio el servidor, se reinicia la sesión. 
+
+Puedo poner lo que quiera en req.session.
+
+Endpoints de hoy:
+
+import { Router } from "express";
+import config from "../config.js";
+
+const router = Router();
+router.get("/getcookies", async (req, res) => {
+    try {
+        res.status(200).send({origin: config.SERVER, payload: req.cookies});
+    } catch (error) {
+        
+        res.status(200).send({origin: config.SERVER, payload: null, error: "Error de cookies"})
+    }
+});
+router.get("/setcookie", async (req, res) => {
+    try {
+        res.cookie('mi-cookie','Alta galletita', {maxAge: 3600000});
+        res.status(200).send({origin: config.SERVER, payload: "Cookie"});
+    } catch (error) {
+        
+        res.status(200).send({origin: config.SERVER, payload: null, error: "Error de cookies"})
+    }
+});
+router.get("/deletecookie", async (req, res) => {
+    try {
+        res.clearCookie("mi-cookie")
+        res.status(200).send({origin: config.SERVER, payload: "Cookie eliminada."});
+    } catch (error) {
+        
+        res.status(200).send({origin: config.SERVER, payload: null, error: "Error de cookies"})
+    }
+});
+router.get("/session", async (req, res) => {
+    try {
+        if (req.session.counter) {
+            req.session.counter++;
+            res.status(200).send({origin: config.SERVER, payload: `${req.session.counter} visualizaciones!`})
+        } else {
+            req.session.counter = 1;
+            res.status(200).send({origin: config.SERVER, payload: `Bienvenido! Eres la primera visualización.`})
+            
+        }
+    } catch {
+        
+        res.send({origin: config.SERVER, payload: null, error: "Error de sessions."})
+    }
+    
+});
+router.get("/login", async (req, res) => {
+    try {
+        const user = {mail: "silesivansalustiano@gmail.com", password: "Coki-2011"} // Esto vendría de un req.body
+        const dbMail = "silesiansalustiano@gmail.com";
+        const dbPassword = "Coki-2011";
+        if (user.mail === dbMail & user.password === dbPassword) {
+            req.session.user = {...user, role: "admin"};
+            res.status(200).send("Válido. Ingresando...")
+        } else {
+            res.status(401).send("Datos no encontrados.")
+            
+        }
+    } catch {
+        res.send("Session error.")
+    }
+});
+router.get("/private", async (req, res) => {
+    try {
+        console.log(req.session);
+        if (req.session.user.role == "admin") {
+            res.status(200).send("Bienvenido, admin.")
+        } else {
+            res.status(200).send("ERROR: No tienes permisos.")
+        }
+    } catch {
+        res.send("Session error.")
+    }
+    
+});
+export default router;
+
+
+
