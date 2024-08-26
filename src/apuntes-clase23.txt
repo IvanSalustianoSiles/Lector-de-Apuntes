@@ -8,4 +8,217 @@ Repasando, tres formas de que vuelvan desde el cliente los tokens:
 
 Entonces, modificamos nuestro método antiguo de verifyToken, para contemplar todas esas posibilidades:
 
-21:02
+  "const headerToken = req.headers.authorization
+    ? req.headers.authorization.split(" ")[1]
+    : undefined;
+  const cookieToken =
+    req.cookies && req.cookies[`${config.APP_NAME}_cookie`]
+      ? req.cookies[`${config.APP_NAME}_cookie`]
+      : undefined;
+  const queryToken = 
+    req.query.access_token 
+      ? req.query.access_token 
+      : undefined;
+  const myToken = headerToken || cookieToken || queryToken;
+
+Vamos a revisar nuestras rutas viejas, como las de products, y notar que faltan middlewares de verificación.
+
+Recordando: Los middlewares son la forma típica de trabajo en Express.
+
+Regex: Expresión regular. Un sistema de patrones de búsqueda para corroborar un string que cumpla ciertos parámetros.
+En JS: regex.text(miString); // Supongo que es booleana la respuesta
+
+ID regex de mongodb:  /^[a-fA-F0-9]{24}$/
+
+Desde ahora revisar los parámetros, no dejarlos libres.
+
+Empezaremos a hacer catch-calls con "*", similar al enrutado con react-router-dom como en react.
+
+Express trae una funcionalidad llamada .all(), que nos permitirá enlazar todas las rutas que no son las previas, algo así como el default de un switch, las opciones de descarte.
+
+router.all("*", async(req, res) => {
+})
+.all() // todos los tipos de solicitudes
+"*" // todas las rutas que no son las previas
+Es importante que nuestro catch all esté al final
+
+Esto no tiene que ver con la clase, pero es algo que voy a borrar de mi código, un ejemplo de aggregate comentado del profe (cosas de mdb, clases viejas):
+  // const users = await usersModel.aggregate([
+  //     {$match: {role: "premium"}},
+  //     {$group: {_id: "$region", totalGrade: {$sum: "$grade"}}},
+  //     {$sort: {totalGrade: -1}}
+  // ]);
+
+"router.param("id", async (req, res, next, word) => {
+})" // Pudimos crear esta ruta en lugar del middleware de verifyMDBID, pero ya está jeje
+
+Es hora de crear un router personalizado, a partir del router de express
+
+El constructor de una clase es un método que se llama automáticamente.
+
+"class CustomRouter {
+    constructor() {
+        this.router = Router(); // Nuestro router importado de express
+        this.init(); // método que redefiniremos luego
+    }
+
+    init() {};
+}"
+
+applyCallbacks (callbacks) {
+  return callbacks.map(callback => async(...params) => {
+    try {
+      await callback.apply(this, params); // apply ejecuta una función aplicando ciertos parámetros, y hay que decir a qué scout pertenecen, a this porque es del uso interno de la clase.
+    } catch (error) {
+      console.error(error);
+      params[1].status(500).send({origin: config.SERVER, error: error });
+    }
+  })
+}
+generateCustomResponses (req, res, next) { // middleware para tener disponible nuevos mensajes, más específicos que res.send().
+  res.sendSuccess = payload => res.status(200).send({ origin: config.SERVER, status: 200, payload: payload }); // Estamos guardando en el propio res nuevos métodos personalizados.
+  res.sendUserError = userError => res.status(400).send({ origin: config.SERVER, status: 400, error: userError });
+  res.sendServerError = serverError => res.status(500).send({ origin: config.SERVER, status: 500, error: serverError });
+  next();
+}
+get (path, ...callbacks) { // Primero el path, y luego un array desestructurado de callbacks, donde entran los middlewares y finalmente la función asíncrona.
+  this.router.get(path, this.generateCustomResponses, this.applyCallbacks(callbacks));
+}
+
+Herencia de clases (clases que heredan todas las propiedades y métodos de las anteriores)
+
+Mi custom (a modificar y aplicar) queda así:
+
+export class CustomRouter {
+  constructor() {
+    this.router = Router();
+    this.init();
+  }
+
+  init() {}
+
+  getRouter() {
+    return this.router;
+  }
+  applyCallbacks(callbacks) {
+    return callbacks.map((callback) => async (...params) => {
+      try {
+        await callback.apply(this, params); // apply ejecuta una función aplicando ciertos parámetros, y hay que decir a qué scout pertenecen, a this porque es del uso interno de la clase.
+      } catch (error) {
+        console.error(error);
+        params[1]
+          .status(500)
+          .send({ origin: config.SERVER, error: `[ERROR]: ${error}` });
+      }
+    });
+  }
+  generateCustomResponses(req, res, next) {
+    // middleware para tener disponible nuevos mensajes, más específicos que res.send().
+    res.sendSuccess = (payload) =>
+      res
+        .status(200)
+        .send({ 
+            origin: config.SERVER, 
+            status: 200, 
+            payload: payload 
+        }); // Estamos guardando en el propio res nuevos métodos personalizados.
+    res.sendUserError = (userError) =>
+      res
+        .status(400)
+        .send({
+          origin: config.SERVER,
+          status: 400,
+          error: `[ERROR 400]: ${userError}`,
+        });
+    res.sendServerError = (serverError) =>
+      res
+        .status(500)
+        .send({
+          origin: config.SERVER,
+          status: 500,
+          error: `[ERROR 500]: ${serverError}`,
+        });
+    res.sendUnavailableError = (unavailableError) =>
+        res
+          .status(503)
+          .send({
+            origin: config.SERVER,
+            status: 503,
+            error: `[ERROR 503]: ${unavailableError}`,
+          });
+    res.sendAuthenError = (authenError) =>
+      res
+        .status(401)
+        .send({
+          origin: config.SERVER,
+          status: 401,
+          error: `[ERROR 401]: ${authenError}`,
+        });
+    res.sendAuthorError = (authorError) =>
+      res
+        .status(403)
+        .send({
+          origin: config.SERVER,
+          status: 403,
+          error: `[ERROR 403]: ${authorError}`,
+        });
+    res.sendNotFoundError = (notFoundError) =>
+      res
+        .status(404)
+        .send({
+          origin: config.SERVER,
+          status: 403,
+          error: `[ERROR 403]: ${notFoundError}`,
+        });
+
+    next();
+  }
+  get(path, ...callbacks) { // Primero el path, y luego un array desestructurado de callbacks, donde entran los middlewares y finalmente la función asíncrona.
+    this.router.get(
+      path,
+      this.generateCustomResponses,
+      this.applyCallbacks(callbacks)
+    );
+  };
+  post(path, ...callbacks) {
+    this.router.post(
+      path,
+      this.generateCustomResponses,
+      this.applyCallbacks(callbacks)
+    );
+  };
+  put(path, ...callbacks) {
+    this.router.put(
+      path,
+      this.generateCustomResponses,
+      this.applyCallbacks(callbacks)
+    );
+  };
+  delete(path, ...callbacks) {
+    this.router.delete(
+      path,
+      this.generateCustomResponses,
+      this.applyCallbacks(callbacks)
+    );
+  };
+};
+
+Políticas-Dependen de la empresa
+
+Nosotros abordaremos:
+
+-Public: Acceso libre.
+-Authenticated: Que cuente con un token de acceso (ej: users, premiums, admins).
+-USER: Usuario común.
+-USER_PREMIUM: Usuario con membresía premium.
+-ADMIN: Administrador del sitio.
+
+-Todas nuestras rutas ahora deberán recibir primero un middleware de políticas, que contenga todas las verificaciones en distintos niveles.
+-Se recibe un array de políticas como parámetro y se evalúa.
+-Cuando apliquemos el customRouter, este contará con el middleware ya integrado en sus endpoints, para no repetir todo el tiempo.
+
+PENDIENTE:
+-Pasar de sessions a JWT
+-Pasar de router a Custom Router
+-Crear passport call // nah
+-Pasar a passport completamente, y agregar más autenticaciones

@@ -1,0 +1,35 @@
+Segunda Práctica Integradora (19/06/2024)
+
+Práctica de Integración
+
+-Mongo Avanzado
+-Cookies
+-Autenticación y autorización
+-Passport
+-JWT
+
+¿Cómo hacíamos populación? (Clase 16)
+
+Propiedad ref en el modelo padre con nombre de la colección a la que apuntamos y .populate() en el endpoint / manager (dependiendo de dónde usemos el .find()) para terminar de conectar.
+
+Sino, ref en el modelo y middleware pre (mongoose.Schema.pre()...). Mirar Clase 16
+
+Paginación (Clase 17)
+
+Podíamos simplemente hacerla con .find().skip() y .find().limit(), pero la librería moongose-paginatev2 nos permitía trabajarla de forma más dinámica:
+
+.lean() convertía un objeto de Mongoose en POJO (Plain Old JavaScript Object)
+
+productsModel.paginate({}, {page: 1, limit: 10, lean: true}) // podemos poner el lean directamente en el paginate
+
+Recordando tema autorización vs Autenticación
+- Autenticación- Poner sus datos 401
+- Autorización - Habiendo puesto sus datos, que tenga permiso 403
+
+Lógica de login
+Recordemos que las contraseñas con la librería bcrypt no son reversibles - desencriptables, hasheamos lo que nos llega y lo cortejamos con la base de datos.
+Busqueda por mail en base de datos, si hay usuario, comparamos contraseñas con bcrypt.
+
+Agregamos en la autenticación de Passport de GitHub opciones para contemplar que el mail del usuario no sea público, con accessToken.
+
+

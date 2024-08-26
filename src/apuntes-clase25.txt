@@ -1,0 +1,205 @@
+Proceso principal del servidor + Global & Child Process (24/06/2024)
+
+Process
+
+process- Objeto nativo de Node JS que trae un paquete de datos.
+
+process.pid- Nos indica el id del proceso. Las trabaja el sistema operativo, node nos trae las ids de proceso en process.
+
+process.cwd- Directorio actual del proceso.
+
+process.MemoryUsage()-
+
+process.env- Accede al objeto del entorno actual.
+
+process.argv- Muestra los argumentos pasados por CLI (consola).
+
+process.version- Muestra la versión del proceso (node, en este caso).
+
+process.on()- Permite settear un listener de eventos.
+
+process.exit()- Permite salir del proceso.
+
+1- Manejo de argumentos
+
+Sumamos librerías commander y dotenv
+
+Commander: Nos permitirá parsear opciones de lineas de comandos
+
+Ej: script.js --port 6000 (En este caso, el argumento es --port)
+
+El punto es no dejar todo fijo como en el config por ejemplo, sino empezar a configurar opciones antes de que inicie a correr la lectura del archivo
+
+Por ejemplo el puerto donde arranca, si arranca en modo desarrollo o producción.
+
+DotEnv: Para configurar variables de entorno. Ahora node tiene forma nativa, pero podemos usar cualquiera de las dos.
+
+process.argv() => Guarda un array de comandos para pasar cuando se ejecute el script.
+
+Chequeo process.argv en un log y viene:
+
+[
+  'C:\\Program Files\\nodejs\\node.exe',
+  'C:\\Users\\Administrator\\Desktop\\ProyectosBackEnd\\repasoJS\\src\\app.js'
+]
+
+Primero la ruta de manejo de versiones, el profe lo maneja con nvm y yo no lo tengo, y luego la ruta del ejecutable (ejecuté app.js)
+
+[
+  'C:\\Program Files\\nodejs\\node.exe', // node --watch
+  'C:\\Users\\Administrator\\Desktop\\ProyectosBackEnd\\repasoJS\\src\\app.js', // app.js
+  '--port', // --port
+  '5000' // 5000
+] // node --watch app.js --port 5000
+
+Es algo incómodo de trabajar, habría que hacer un split() para separar algunas cosas, etc. Usamos commander
+
+Commander permite:
+-Convertir flags en booleanos.
+-Limitar sólo las flags configuradas 
+-Colocar argumentos predeterminados
+
+import { Command } from "commander";
+
+const CommandLine = new Command();
+
+CommandLine
+  .option("--mode <mode>")
+  .option("--port <port>", "Puerto de trabajo", 8080) // Flag, description, default
+CommandLine.parse() 
+
+const CLOptions = CommandLine.opts();
+
+console.log(CLOptions)
+
+Ahora ejecuto node --watch app.js --port=6000 --mode=development
+
+Y se ejecuta con esas configuraciones.
+
+Ahora si ejecuto app.js, sin configurar nada, igualmente me hace el log de port porque lo tengo en default 8080
+
+Commander reemplaza process.argv.slice(2) (slice 2 porque salteamos las dos primeras opciones con el manejo de versiones y la ruta)
+
+Objetivo fundamental de Commander: 
+Cambiar nuestro script sin tener que tocar código, al momento de ejecución.
+
+2- Variables de entorno
+
+-Variables gestionadas por el sistema operativo (aunque también podemos configurar propias de nuestra aplicación)
+
+-El objetivo como herramienta de las variables de entorno es que se puedan compartir entre aplicaciones.
+
+Windows tiene sus propias variables de entorno :0
+
+process.env- Nos permite acceder a las variables de entorno de nuestro sistema operativo, desde node.
+
+Ej: process.env.OS (OS es una variable de entorno de mi Windows)
+
+Creamos un archivo .env y lo ignoramos, simplemente escribiendo .env en gitignore
+Si es carpeta, carpeta/
+
+Pasarle a la tutora el .env para que pueda acceder a los secrets
+
+dotenv para manejo rápido de variables de entorno:
+
+import dotenv from "dotenv";
+dotenv.config() // Busca en mi .env e inyecta mis variables de entorno en el sistema.
+
+dotenv.config({ path: ruta_archivo_env });
+
+con ; al inicio se comenta en .env
+
+Mi comando con las flags configuradas para la app:
+node --watch app.js --mode=development --appname=laschicas --port=8080 --server=ecommerce --mongouri=mongodb+srv://silesivansalustiano:Coki2011@codercluster.n4kbrpc.mongodb.net/ecommerce --secret=113287484745753643170604 --ghclientid=Iv23ctaa6Yvs1eBdjySK --ghclientsecret=f1aa5f3f46af6fb6279e7e0e7a1d9cdd5e40649c --ghcallbackurl=http://localhost:8080/api/sessions/ghlogincallback 
+
+Opción actual nativa de Node.js:
+
+En vez de dotenv.config():
+
+--env-file .env src/app --port 5050 // Lo bueno de esto es que podemos elegir si trabajar con .env o quizás con otro archivo de variables de entorno, algunas que sean para producción y otras para desarrollo.
+
+Ahora, con dotenv podríamos:
+
+const envPath = CLOptions.mode == "production" ? "../.envprod" : "../.envdev";
+
+dotenv.config({ path: envPath }); // Trabajando con dos archivos de variables de entorno
+
+Listeners con process.on
+
+process.on("exit", code => {
+    console.log("Se ejecuta justo antes de salir del proceso")
+});
+
+process.on("uncaughtException", exception => {
+    console.log("Atrapa todas las excepciones no controladas, como llamar una función no declarada")
+});
+
+process.on("message", message => {
+    console.log("Atrapa mensajes recibidos de otros procesos")
+});
+
+process.uptime().toFixed(1) => Tiempo de actividad del servidor en segundos
+
+Ejemplo de exit:
+
+process.on("exit", error => {
+  if (error === -4) {
+      console.log("[ERROR]: Uno de tus campos no contiene un número.")
+  }
+})
+
+const listNumbers = (...numbers) => {
+  numbers.forEach(number => {
+      if (isNaN(number)) {
+          process.exit(-4)
+      } 
+      console.log(number);
+  })
+}
+
+listNumbers(3, 4, "cinco", 8);
+
+result += i es lo mismo que result = result + i
+
+dailydev - Noticias de programación, está en playstore
+
+Si una aplicación tiene un proceso que tarda, traba todos los demás endpoints hasta que el primero se termine de procesar.
+
+Solución: Child Process
+
+Consiste en delegar nuestro proceso complejo a un proceso hijo.
+
+Mientras el proceso hijo trabaje, el padre queda pendiente pero se pasa a los demás endpoints más rápidos de resolver.
+
+Una vez que el proceso hijo terminó de trabajar, devuelve el resultado al proceso padre (el complejo) y resuelve su endpoint.
+
+En Node.js, existen cuatro formas de que un proceso ejecute un proceso hijo:
+
+-spawn()
+-fork()
+-execFile()
+-exec()
+
+En esta clase sólo veremos fork(), investigar los demás.
+ 
+import { fork } from "child_process"; // child_process es nativo
+
+router.get("complexok", async (req, res) => {
+    const child = fork("src/complex-process.js");
+    child.send("Empezá el proceso complejo, por favor");
+
+    child.on("message", result => {
+        res.status(200).send({origin: config.SERVER, payload: result });
+    })
+})
+
+Mientras tanto en mi hijo...
+
+process.on("message", message => {
+    let result = 0;
+    for (let i = 0; i <= 3e9; i++) result += i;
+    process.send(result)
+})
+
+El problema de fondo es que JS y NodeJS son single thread (hilo único de ejecución)
+Entonces espera a que se resuelva cada endpoint.

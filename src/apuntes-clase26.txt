@@ -1,0 +1,68 @@
+Arquitectura por capas (26/06/2024)
+
+Otro servicio de hosting para deploys - Render, es como Vercel
+
+Environment - Environment variables - Podemos agregar nuestras variables de entorno
+
+Generalmente, como ocurre tanto en Vercel como en Render, no vamos a enlazar directamente nuestro código con el servicio, sino, que nos vamos a loggear con GitHub y el sistema se va a encargar de enlazar el repositorio.
+
+Aprender AWS.
+
+Excalidraw para escribir y dar clases virtuales (conseguir pizarra digital)
+
+Arquitectura de capas
+
+
+Objetivo de utilizar patrones de diseño en base a capas:
+
+-Separar responsabilidades, modularizar
+
+MVC => Model View Controller (?)
+
+Tres capas fundamentales:
+
+View (Capa de Vista o Renderización o Presentación) - Le envía la acción de usuario al Controller / UI
+
+Controller (Capa de Controlador o Negocio ) - Actualiza el Model - Regresa con una actualización de datos al View / Mediador
+
+Model (Capa de Modelo o Persistencia) - Contiene la data, le notifica cambios al Controller / Data
+
+Sin estas tres capas, el modelo sería inconsistente.
+
+Nuestra carpeta views, contienen la capa View (Capa de vista, renderización o presentación).
+
+Nuestra carpeta dao (Data Access Objects), contiene la capa Model (capa de modelo o persistencia), porque nos definen cómo están organizados los datos, y cuando trabajamos con mongoose llamamos a los métodos de trabajo a través de estos modelos.
+
+Ejemplo: En un endpoint, nos llega del view la información del usuario.
+
+El controlador (nuestro manager), va a buscar al modelo, quien se conecta con la base de datos, en nuestro caso MongoDB.
+
+El modelo devuelve al Controller, y el Controller le devuelve al view.
+
+Nosotros vamos a agregar una capa propia de las APIs de Express, la capa de las rutas.
+
+Elección de patrones:
+-Depende del tamaño y la complejidad de la aplicación.
+
+Estrategias generales:
+- Basic (básica): Para app pequeña.
+- Capas (layered, MVC): Como estamos haciendo.
+- Components (componentes): Como hicimos en React.
+- Microservices (microservicios): Apps distintas encargadas de distintos microservicios, comunicándose entre sí.
+
+Opción:
+Controllers, Dao, Models, y Routes
+
+Antes todo se manejaba del lado del servidor, con PHP (abierto) o ASP (Microsoft)
+
+PHP procesaba un código que terminaba por renderizar un html, y luego eso llegaba al cliente.
+
+Capa de servicios:
+
+Capa intermedia entre el controlador (managers) y la persistencia (models)
+
+Nos permitirá pasar de los managers a los models evitando errores en el proceso, que no se acceda a los models descontroladamente.
+
+Ruta - Controlador - Servicio - Modelo - DB
+
+
