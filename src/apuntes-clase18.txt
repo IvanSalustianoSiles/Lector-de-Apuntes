@@ -1,4 +1,4 @@
-Cookies, Sessions & Storage (27/05/2024)
+-Cookies, Sessions & Storage (27/05/2024):
 
 ¿Cómo identificamos a los usuarios?
 

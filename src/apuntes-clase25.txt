@@ -1,4 +1,4 @@
-Proceso principal del servidor + Global & Child Process (24/06/2024)
+-Proceso principal del servidor + Global & Child Process (24/06/2024):
 
 Process
 

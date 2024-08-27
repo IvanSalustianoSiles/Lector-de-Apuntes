@@ -1,4 +1,4 @@
-Passport Avanzado (10/06/2024)
+-Passport Avanzado (10/06/2024):
 
 Refrescando: Passport nos da varias opciones de autenticación.
 

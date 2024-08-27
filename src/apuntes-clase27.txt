@@ -1,0 +1,261 @@
+-Arquitectura del servidor: Diseño (01/07/2024):
+
+Cuando creamos una aplicación desde cero, debemos considerar:
+
+-Que el código sea reutilizable (ej: usando funciones, y que se puedan aplicar en varios contextos)
+-Que el código sea escalable
+-Homologación de patrones de diseño (ej: Trabajar todo en MVC (Model View Controller), trabajar todo con components (como en React), etc. Básicamente usar un sólo patrón de diseño).
+
+Nota de cosas que dice el profe: "Un método no es más que una función en el contexto de una clase".
+
+Recordando nuestra checklist de buenas prácticas de la clase anterior:
+
+1-Adoptar organización modular (separar en módulos reusables)
+2-Separar capas con responsabilidades. // Hasta acá tenemos todo, el código está bien organizado en capas.
+3-Usar convenciones de nomenclatura. // Ponerse de acuerdo y nombrar todo con estándares (ej: escribir todo en inglés o todo en español)
+3.5- Manejo de entornos (development, staging, production, osea desarollo, pruebas y producción). Mínimo development y production.
+4-Normalizar nombres de métodos.
+4.5- Testing
+5-Usar gestión de paquetes (npm).
+6-Usar control de versiones (GitHub).
+7-Generar control centralizado de errores.
+8-Generar registro centralizado de sucesos.
+
+Voliendo al 3-...
+Podemos hacer una lista de cosas para organizar bien sus nombres, por ejemplo:
+-constantes generales (UPPERCASE) ej: MY_LIMIT
+-variables normales (camelCase / snake_case) (en c++ es muy común el snake_case) ej: myVar / my_var
+-variables de entorno (UPPERCASE) ej: APP_NAME
+-funciones (camelCase) ej: myFunction
+-clases (PascalCase) ej: ProductManager
+-archivos (notación de puntos / snake_case, NUNCA espacios) ej: apuntes_clase_29 / apuntes.clase.29
+
+Constantes globales en mayúsculas, por eso el profe pone en mayúsculas las propiedades del config!
+
+-Volviendo a homologación...es básicamente ponernos de acuerdo con nuestro equipo sobre un patrón de diseño. Muy común en el entorno laboral, importantísimo.
+
+-De lo más general, a lo más detallado. Incluído por ejemplo lo de las nomenclaturas que vimos recién, o qué frameworks se van a utilizar, etc.
+
+Generalmente, hoy en día, los equipos de programación son muy dinámicos.
+
+Los proyectos no duran más de tres años. La gente entra y sale y se necesita un estándar para presentarle de manera rápida y accesible a los programadores entrantes.
+
+Es necesario documentar los proyectos! Más adelante se verá mejor. También el testing. PD: A nadie le gusta el testing y es necesario, área para explotar.
+
+Sirve mucho para documentar los diagramas de flujo del proyecto, por ejemplo. O anotar referencias.
+
+También sirve, incluso si estamos solos, para volver y recordar cómo era nuestro código. Al menos tenemos que tener una agenda con algunos detalles. Todos nos olvidamos cosas al no revisarlas por varios meses.
+
+Voliendo al 3.5-...
+
+Nuestro entorno debe poder cargar por lo menos un par de entornos de trabajo por separado (clase 25, lo de cargar distintos .env, uno de prod. y uno de dev.).
+
+-Según el powerpoint, todo desarollo serio trabaja con tres entornos:
+
+1- Development
+Dinámico, volátil. Puede haber errores y modificaciones constantes.
+
+2- Staging
+Pensado para pruebas, contiene datos un poco más "serios", las operaciones no deberían fallar.
+
+3- Production
+Entorno final, que puede apreciar el cliente. NO debe fallar; SIEMPRE debe ser funcional para el cliente.
+El objetivo es que el cliente no pueda percibir los errores por fuera de lo contemplado.
+
+Consejo del profe: No trabajar todo en una sola rama (esto lo tengo que cambiar). Ir creando ramas y haciendo merge al main.
+
+-Testing:
+
+Tomar la conducta de probar todas las funcionalidades. 
+A veces asumimos que todo funciona, pero quizás al implementar algo nuevo otra cosa deja de funcionar.
+
+En equipos grandes hay directamente un sector de desarrolladores dedicado a testing.
+
+En nuestro contexto: Testing = Intercambio de proyectos. (Intercambiemos ideas con nuestros compañeros, probemos sus códigos y viceversa).
+
+-Loggear y documentar:
+
+No confundir login (ingresar) con loggear (generar un log, un registro).
+
+El profe según su experiencia: Todos los servidores generan registros de absolutamente todo lo que pasa.
+
+Pronto se trabajará mejor, pero, por ejemplo: Nos permite percatarnos de si hay un ataque al servidor.
+
+Hoy en día, es muy difícil que un atacante no deje algún tipo de registro.
+
+El profe usó en muchos proyectos Winston y vamos a usar Morgan, para hacer registros de lo que va sucediendo.
+
+-Patrones de diseño:
+Soluciones replicables para problemas comunes de desarrollo.
+NO son código ya realizado, sino descripciones sobre cómo resolver un problema.
+(Básicamente son conceptos para aplicar en nuestro código o que ya aplicamos y no lo sabemos)
+
+1- Cadena de responsabilidades
+Cuando hay un elemento que envía información (sender), y existe otro elemento que lo recibe (receiver), este patrón de diseño consiste en hallar una manera de permitir que esa información primero pase y sea procesada por múltiples objetos o funciones.
+
+En Express, esto son los middlewares. Son muy característicos de Express y prácticamente esta librería los popularizó.
+
+2- Decoradores
+
+Consiste, básicamente, en trabajar un objeto inicial genérico que luego al ser utilizado esté abierto a ser alterado.
+
+En Express, por ejemplo, cuando ejecutamos el middleware de Multer ahora tenemos disponible req.file y req.files, cuando antes del middleware req no contenía dichas propiedades.
+
+Este tema se verá mejor en las últimas clases.
+
+Suelen escribirse con un @.
+
+3- Proxy
+
+También conocido como proxy routing o routing pattern, consiste en que tenés un sustituto (surrogate), que recibe una petición y controla el acceso a un objeto (subject).
+
+El surrogate o sustituto recibe todas las peticiones, y decide a quién enviárselas.
+
+En Express:
+
+Creamos un router en Express y conectamos el middleware de router a app.use()
+
+app.use() es nuestro sustituto, que luego decide a qué router enviar la información.
+
+Ej: 
+const app = express(); // Definimos nuestro sustituto
+app.listen(config.PORT,...) // Nuestro sustituto escucha todas las peticiones
+app.use("/api/carts", cartRoutes); // Elige a dónde, y qué enviar.
+
+Conclusión: Un proxy es un intermediario que filtra, que en Express es el middleware app.use(), en este caso.
+
+4- Patrón Singleton
+
+Es un patrón utilizado para tener una instancia global a nivel aplicación.
+
+Se asegura de que sólo haya una instancia de estas (por ejemplo, la conexión con base de datos, sólo puede haber una y es a nivel global de aplicación).
+
+Si ya hay instancia, la devolverá; Sino, la creará.
+
+(Hasta acá lo meramente teórico, hasta 01:28:00 aprox. de clase. Luego de lo del singleton cuando empieza con Comunicación entre el Back y el Front volver a estos apuntes).
+
+-Crearemos nuestro propio Singleton: 
+
+Los métodos de clases que inician con "#" son privados.
+
+import mongoose from "mongoose";
+
+export default class MongoSingleton {
+    static #instance; // Lo definimos fuera del constructor porque al día de la fecha no hay forma de hacer que el constructor sea privado en JS nativo.
+
+    constructor () { // Recordemos que, por definición, el constructor es simplemente la función que primero se ejecuta de la clase, más allá de la forma convencional en la que solemos escribirlo.
+        mongoose.connect("Url", { useNewUrlParser: true, useUnifiedTopology: true }) 
+    }
+
+    static getInstance() { // Recordando, la palabra static indica que el método sólo es accesible por medio de la clase en sí misma directamente y no por una instancia de ella en sí. Ej: hola = new claseSaludo; hola.getInstance(); daría error, tiene que ser claseSaludo.getInstance();
+        if (this.#instance) {
+            console.log("Ya se encuentra conectado.");
+            return this.#instance;
+        }
+
+        this.#instance = new MongoSingleton(); // Básicamente, el método getInstance() intenta crear una nueva instancia de la clase, lo que entraría al constructor y a conectar con la db. Si ya había instancia, la retorna.
+        console.log("Conectado");
+        return this.#instance;
+    }
+}
+
+Ahora, si hubiera un problema con la conexión a la base de datos, simplemente se reconectaría solo, gracias a getInstance().
+
+Ahora sockets.js, uploader.js y utils.js van en services
+
+-Comunicación entre BackEnd y FrontEnd, y CORS:
+
+Hasta ahora hicimos SSR (Server Side Rendering), haciendo todo desde el servidor, con nuestras vistas de handlebars.
+
+Estas vistas contienen información precargada que luego se renderiza en HTMLs (el cliente).
+
+Es útil para páginas estáticas, sin mucha interacción.
+
+PHP y ASP eran lenguajes completamente SSR.
+
+En PHP uno tiene un código mezclado con HTML en un archivo en el servidor.
+
+Se hace una consulta, el servidor mezcla la respuesta con el HTML en PHP y devuelve el HTML al navegador (muy similar a trabajar con Handlebars, a nivel conceptual).
+
+CSR - Client Side Rendering
+
+Todo del lado del cliente y el navegador, donde incluso se hacen todas las peticiones.
+
+Se contempla para sitios altamente dinámicos, ya que no necesitan recargar toda la página al hacer algún cambio.
+
+Sin embargo, en la primera carga, cuando se carga todo, notaremos que es muy lento a comparación.
+
+En la época dorada de PHP, la demanda estaba mucho más orientada para el SSR, sin embargo, luego se tendió al CSR con el auge de JS y sus librerías de Front como React y Angular
+
+Hoy en día se busca un equilibrio, no cargar demasiado de ningún lado.
+
+- ¿Cómo funciona el modelo cliente-servidor?:
+
+Tenemos una noción debido a que entendemos el request-response, sin embargo, ¿cuál es la esencia de esta comunicación?
+
+1- Headers
+
+Los headers pasan entre el cliente y el servidor y contienen configuraciones importantes de mi solicitud, como por ejemplo:
+
+-Token de autorización.
+-Formato de envío de datos.
+-Indentificador del elemento que realiza la petición.
+
+Ej:
+
+let response = await(await(fetch("/api/upload", {
+    headers: {
+        "Authorization": `Token ${key}`,
+    },
+    method: "POST",
+    body: formData
+}))).json()
+
+Cuando el cliente hace una petición, puede enviar información de varias maneras:
+-Por los headers
+-Por query params
+-Por route params
+-Por el body
+
+Esto dependerá del método de la petición (de hecho, para algunos métodos no está disponible el body) y de cómo pida que envíes la información la API.
+
+-Origen de la petición: De dónde viene.
+
+Request headers: (el power no los explica porque son de ejemplo, pendiente de investigar porque me interesa)
+-Accept: */*
+-Accept-Encoding: gzip, deflate, br
+-Accept-Language: es-419,es;q=0.9
+-Cache-Control: no-cache
+-Connection: keep-alive
+-Host: localhost:8080 // ¿A qué host envié la petición?
+-Origin: null // Es null cuando se hace con plain js (osea, nativo), sin un servidor de escucha.
+-Pragma: no-cache
+
+Yendo a otro tema no tan lejano...
+
+-CORS (Cross-Origin Resource Sharing):
+Mecanismo para proteger las solicitudes. Antes era todo mucho más abierto.
+
+Ahora estamos trabajando local, ningún problema. Luego, cualquier persona va a poder realizarnos solicitudes, desde cualquier sitio.
+
+Puede que eso nos interese, o no.
+
+Con Handlebars no teníamos el problema de orígenes cruzados puesto que todo ocurre desde el mismo puerto.
+
+No queremos que nos hagan solicitudes desde puertos distintos.
+
+Si no instalamos cors, nadie de otros puertos nos puede hacer solicitudes. Es recomendable instalar cors para poder decidir.
+
+npm install cors
+
+import cors from "cors";
+
+app.use(cors());
+
+"app.use(cors({
+  origin: "*"
+}));"  // Acepto solicitudes desde cualquier origen.
+
+Ya oficialmente podemos trabajar entre un Front externo, dígase React, y nuestra API.
+
+Reestructurando nuestro servidor

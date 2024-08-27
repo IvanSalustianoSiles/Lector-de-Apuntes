@@ -1,4 +1,4 @@
-Autorización y Autenticación (03/06/2024)
+-Autorización y Autenticación (03/06/2024):
 
 Passport - Para manejar autenticaciones (una alternativa).
 

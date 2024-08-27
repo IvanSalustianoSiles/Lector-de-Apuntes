@@ -1,4 +1,4 @@
-Cookies, Sessions & Storage II (29/05/2024)
+-Cookies, Sessions & Storage II (29/05/2024):
 
 Sesión: Ciclo de interacción entre un sitio y un cliente. 
 

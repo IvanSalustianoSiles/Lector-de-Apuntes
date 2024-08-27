@@ -1,4 +1,4 @@
-Ruteo avanzado y estrategias avanzadas de autorización (12/06/2024)
+-Ruteo avanzado y estrategias avanzadas de autorización (12/06/2024):
 
 Repasando, tres formas de que vuelvan desde el cliente los tokens:
 

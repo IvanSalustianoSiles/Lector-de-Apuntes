@@ -1,4 +1,4 @@
-Arquitectura por capas (26/06/2024)
+-Arquitectura por capas (26/06/2024):
 
 Otro servicio de hosting para deploys - Render, es como Vercel
 
@@ -65,4 +65,39 @@ Nos permitirá pasar de los managers a los models evitando errores en el proceso
 
 Ruta - Controlador - Servicio - Modelo - DB
 
+Capa de rutas - Pide datos, y entrega datos.
+Tres responsabilidades:
+-Si hay parametros, validar
+-Solicitar
+-Entregar
 
+Si yo el día de mañana quiero cambiar de Mongoose a MySQL por ejemplo, habría que sentarme a modificar todas las rutas donde está ese modelo de MongoDB.
+Por eso mismo, es que hay que separar las responsabilidades.
+
+Una capa de servicio aislada nos permite generar un fácil desacoplamiento entre el controlador y la persistencia o modelo.
+
+La idea es no modificar el controlador ni tampoco al enrutado, sino, modificar una etapa intermedia de servicios en la que se evalúe (por ejemplo, mediante una flag) con que db se va a trabajar, y en función de ello tomar un modelo u otro y retornarlo.
+
+Checklist que iremos tachando a lo largo de las clases siguientes:
+
+-Adoptar organización modular (separar en módulos reusables)
+-Separar capas con responsabilidades.
+-Usar convenciones de nomenclatura.
+-Normalizar nombres de métodos.
+-Usar gestión de paquetes (npm).
+-Usar control de versiones (GitHub).
+-Generar control centralizado de errores.
+-Generar registro centralizado de sucesos.
+
+Recordando problema de req.session y la asincronía:
+
+req.session.user = myUser; // Tarda un poco
+res.redirect("/profile"); // Intenta llegar pero como tarda, no puede ir a profile, redirecciona a login de nuevo.
+
+En caso de que te tarde, se soluciona así:
+
+req.session.user = myUser;
+req.session.save(error => {
+    if (error) return res.status(500).send({ origin: config.SERVER, error: `[ERROR]: ${error}` });
+    res.redirect("/profile"); 
+}) // Primero guarda, recién redirecciona a profile.

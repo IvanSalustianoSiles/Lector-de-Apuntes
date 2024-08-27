@@ -1,4 +1,4 @@
-CRUD en MongoDB (08/05/2024)
+-CRUD en MongoDB (08/05/2024):
 
 Lista de comandos de consulta de MongoShell:
 -show dbs

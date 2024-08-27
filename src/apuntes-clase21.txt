@@ -1,4 +1,4 @@
-Estrategia de autenticación por terceros + JWT (05/06/2024)
+-Estrategia de autenticación por terceros + JWT (05/06/2024):
 
 Sessions vs JWT (Tokens), para manejo de datos temporales.
 

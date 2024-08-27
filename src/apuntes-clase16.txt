@@ -1,4 +1,4 @@
-Mongo Avanzado I (20/05/2024)
+-Mongo Avanzado I (20/05/2024):
 DAO: Data Access Object (Para identificar rutinas de recuperación y manejo de datos. En este caso, de MongoDB)
 
 Repasito:

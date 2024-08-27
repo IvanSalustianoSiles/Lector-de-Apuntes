@@ -1,4 +1,4 @@
-Mongoose (23/05/2024)
+-Mongoose (23/05/2024):
 
 Mongoose: Librería para trabajar todo lo de MongoDB desde JavaScript.
 (También podría hacerse desde vanilla)
