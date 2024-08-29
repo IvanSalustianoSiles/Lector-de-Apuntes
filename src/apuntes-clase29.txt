@@ -1,0 +1,102 @@
+Desarrollo de un servidor web basado en capas completo (08/07/2024)
+
+Hoy no hay temas nuevos: Repaso desde cero para arrancar un proyecto ya con capas.
+
+Clase de complejidad media-alta.
+
+1- Etapa de Routing y Controladores.
+
+Etapas del profe:
+
+0- Organización de capas.
+1- Rutas y controladores. (primero definimos los archivos vacíos, que simplemente podamos hacer los llamados)
+2- Modelos, DAOs, conexión MongoDB.
+3- Enlace negocio y servicios.
+4- Prueba Front. 
+
+-Etapa 0:
+-Crear estructura MVC vacía y levantar Express
+src:
+-Controllers
+-Model
+-Routes
+-Services
+-app.js
+-config.js
+-env.devel (mínimo PORT y MONGODB_URI, para poder conectar)
+-env.prod
+-Levantar server base (commander, CORS, dotenv, Express, Mongoose)
+-Package.json (activar modules, script dev y start)
+
+Viendo al profe:
+-Crea una carpeta back y una front.
+-A back le pone controllers, models, routes, services, app, config y utils.
+-Pone el type module y los scripts
+-npm install con el package json y ya se instala todas las dependencias
+-Completa los paquetes de variables de entorno con PORT, MONGOOSE_URI y persistence, o en mi caso source, para poder definir si está en development o production después
+-Sin buscar de package json, npm i commander cors dotenv express mongoose
+-Se trae el config de clases viejas
+
+-En app, rápidamente importa express, cors y config
+
+Recordando: CORS nos permite evitar bloqueos de orígenes cruzados.
+
+Cuando nuestro servidor es público, el navegador bloquea puertos por defecto.
+
+El mecanismo más común para filtrar los orígenes es CORS.
+
+Ya inmediatamente todo dentro de un try catch,
+
+const app = express();
+
+const httpServer = app.listen(config.PORT, () => {
+    console.log(`Back en el puerto ${config.PORT}`)
+})
+
+Middlewares de app.use básicos:
+
+app.use(express.json());
+app.use(express.urlenconded({ extended: true }));
+app.use(cors: {origin: "*", methods: "GET,POST,PUT,DELETE"}); // También se pueden filtrar los tipos de verbos HTTP
+Si nuestro servidor fuera privado, habría direcciones IP, o una lista de rutas desde las cuales se aceptan los solicitudes, en vez de *.
+
+1- Etapa Routing y Controladores:
+1-Crear archivos vacíos de rutas y controladores.
+2-Habilitar verbos GET, POST, PUT y DELETE.
+3-Habilitar métodos en controladores (get, add, update, delete)
+4-Enlazar paquetes de rutas en el app.js
+
+En las rutas importamos el controlador, definimos const router = Router(), hacemos los verbos básicos con nuestro controlador dentro, el try catch, etc.
+Los métodos del controlador simplemente retornan lo que tienen que hacer.
+
+exportamos como default las rutas, y en el app seguido de los demás .use():
+
+app.use("api/rutasimportadas", miRouterImportado);
+...
+
+-Con postman vamos probando los endpoints para ver si no hay errores esenciales.
+
+2- Models
+-Empezamos creando los archivos de modelos.
+-Copiamos un modelo que ya tengamos para ahorrar tiempo.
+-Importamos mongoose
+-mongoose.pluralize(null)
+-const collection = "coder"
+-const schema = new mongoose.Schema({
+    first_name: {type: String, required: true},
+    role: {type: String, enum: ["admin", "user", "premium"], default: "user"},
+    orders: [{type: mongoose.SchemaTypes.ObjectId, ref: "orders"}]
+})
+
+export const myModel = mongoose.model(collection, schema);
+
+en otras palabras: mongoose.model("coder", new mongoose.Schema({
+...
+})) // Esto también es posible
+
+Generalmente sólo mencionamos la id si vamos a popular, para decir que referenciamos a partir de ella.
+
+-Llama a los modelos en los DAOs (services) y va haciendo endpoints muy genéricos y simples.
+
+01:01:18
+

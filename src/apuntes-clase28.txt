@@ -1,0 +1,47 @@
+-Arquitectura del servidor: Persistencia (03/07/2024):
+
+A- Repasando (y modificando) nuestra to do list de buenas prácticas:
+
+1-Generar código reutilizable y escalable. (funcones reutilizables, la menor cantidad de cosas fijas).
+2-Seguir convenciones de nomenclatura y estilos consistentes. (Mantener uniformidad con las palabras que usamos para declarar las cosas).
+3-Utilizar comentarios inteligentemente. 
+4-Adoptar organización modular, separar capas con responsabilidades.
+5-Elegir un patrón general, MVC en nuestro caso (Model, View, Controller).
+6-Usar gestión de paquetes (npm, yarn, pnpm). Pronto vamos a hablar más de esto. NPM está bien, igualmente. Vamos a aprender de forma más puntual qué hacemos con el package json.
+7-Generar control centralizado de errores. (Próxima clase)
+8-.Testing (unitarios, de integración, etc.) (Próxima clase)
+9-Manejo de entornos (development, staging, production, osea desarollo, pruebas y producción). Mínimo development y production.
+10-Loggear y documentar convenientemente. (Otra clase)
+11-Usar control de versiones (GitHub) (Repasaremos en algún after. Muy utilizado hoy en día).
+12-Homologar patrones y demás convenciones en equipo.
+
+-Patrón DAO (Data Access Object):
+Básicamente, son las funcionalidades que interactuan directamente con los datos.
+
+-Fuentes de datos:
+Tenemos tres tipos:
+-Memoria: La información persiste sólo durante el ciclo de vida del programa.
+-Archivos: La información se guarda en un fichero y se almacena incluso luego del ciclo de vida del programa.
+-Bases de datos: La información no sólo se almacena, sino que se facilita la rápida realización de un CRUD. Es la persistencia por excelencia.
+
+DAO = Persistencia aislada.
+El patrón DAO nos permite separar la lógica de negocio, de la lógica de acceso a las fuentes de datos.
+Esto implica contar con métodos HOMOLOGADOS, de manera que todos los DAOs tengan los mismos nombres de sus métodos, devuelvan lo mismo, etc.
+
+-Patrón de diseño Factory:
+Básicamente, delegar a otro archivo el cambio de base de datos.
+
+-DTO (Data Transfer Object):
+Nos permite transformar la información y crear un dato antes de transferirlo.
+
+El profe lo llama un "objeto normalizador". 
+
+-Se mete en medio de los datos antes de ser procesados por el DAO, para estandarizarlos.
+
+Repaso de la ruta de trabajo:
+
+-El Front hace una solicitud por medio de routes.
+-Llama al controller.
+-Antes de llamar al servicio, el controller hace la normalización de la info por medio de DTO.
+
+Nota: Si realizas cambios de variables y en general acciones en el constructor, recordar que es lo primero que se ejecura al sólo crear un nuevo objeto de dicha clase.
