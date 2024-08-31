@@ -1,0 +1,111 @@
+-Test y Mocks (15/07/2024):
+
+1- TDD: Test Driven Development (Desarrollo basado en pruebas)
+
+Escribimos una rutina vacía y le pasamos una lista de objetivos de prueba que le tenemos que pasar.
+
+Objetivo fundamental: Encontrar con mayor facilidad nuestros errores.
+
+Tres tipos principales de errores:
+-De compilación: El código no puede iniciarse, el compilador no lo puede iniciar (tenemos errores similares, sin embargo, no es nuestro caso, ya que JS no es un lenguaje de compilación)
+
+-De ejecución: Ocurre un error mientras corre, usualmente no controlado.
+
+-Lógicos: Funciona pero no, el código compila y sin embargo el resultado no es el esperado.
+(Trataremos de pulir esencialmente los errores lógicos)
+
+La idea es que el cliente no pierda ni datos ni dinero.
+
+En términos generales, el TDD consiste en lo siguiente:
+Escribir prueba fallida / Hacer que la prueba pase / Refactorizar
+En otras palabras, prueba y error con un, por ejemplo, array, hasta que terminemos nuestra checklist de cosas a implementar y finalmente refactorizar.
+
+-Etapa 1: Escribir pruebas fallidas.
+
+const add = () => {
+
+}
+
+// Flujo principal
+let passed = 0;
+
+const tests = [
+    {process: add(3,2), should_return: 5, desc: "Debe poder sumar bien"};
+    {process: add(3, "pepe"), should_return: null, desc: "Debe poder retornar null"};
+    {process: add(), should_return: 0, desc: "Debe retornar 0"};
+    {process: add(3,2), should_return: 5, desc: "Debe poder sumar bien"};
+    {process: add(3,2,1,5), should_return: 11, desc: "Debe poder sumar con cantidad variable de parámetros"};
+]
+
+tests.forEach(test => {
+    if (test.process === test.should_return) {
+        passed++;
+        console.log(`${test.desc} (${test.should_return}): OK!`);
+    } else {
+        console.log(`${test.desc} (${test.should_return}): ERROR!`);
+    }
+})
+
+console.log(`Pruebas superadas: ${passed}/${tests.length}`);
+
+Yo parto de acá, una rutina vacía: add.
+0/4
+
+A mucha gente le resulta muy ordenado, no es tan común y algo tedioso para algunos. Es necesario conocerla por si acaso.
+
+El profe luego va a pasar una lista de enfoques de trabajo.
+
+Tips de ver cómo codea el profe:
+No pasar parámetros: a===undefined
+typeof(a)
+Si no se pasó ningún parámetro de un array o si un array no fue cargado: array.length === 0;
+params.some(param => typeof(param) !== number) return 0; 
+
+Voy haciendo pruebas, y cuando las logro refactorizo.
+
+Trampa de pruebas técnicas: El objetivo fundamental es la funcionalidad. Enfocarse en eso y no en el código lo más optimizado posible.
+
+Preguntar en las entrevistas si se prefiere eficiencia o lectura.
+
+Prueba de login (no voy a anotar todo porque ya se entiende con el ejemplo anterior):
+
+Si tengo que cortejar con datos, hago datos de ejemplo como en este caso con el login (mail, password)
+
+if (user === undefined || user === null || user === "") return "Falta usuario"
+
+Compacto y legible no es lo mismo. Muchos métodos a veces quitan legibilidad.
+
+2- Desarrollo preventivo a partir de mocks
+Datos de prototipo, falsos, no definitivos.
+Módulo propio de node para generar mocks: Faker.
+
+npm install @faker-js/faker
+
+import bcrypt from "bcrypt";
+import { faker } from "@faker-js/faker";
+
+const roles = [user, premium, admin];
+let users = [];
+const generateFakeUsers = async (quantity) => {
+    for (let i = 0; i < quantity; i++) {
+        const first_name = faker.person.firstName();
+        const last_name = faker.person.lastName();
+        const email = faker.internet.email({ firstName, lastName }); // Que mi mail fake incluya al nombre y al apellido. Está genial esta API!
+        const password = await bcrypt.hash(faker.internet.password(), 10);
+        const role = Math.floor(Math.random() * roles.length);
+        users.push({ first_name, last_name, email, password, role });
+    }
+    return users;
+}
+app.get("/fakeusers/:quantity", async (req, res) => {
+    const data = await generateFakeUsers(+req.params.quantity);
+    res.status(200).send({ status: "OK", payload: data });
+
+})
+https://www.npmjs.com/package/@faker-js/faker
+
+Problema: Es algo lento.
+
+Mockaroo! Mi favorito.
+
+

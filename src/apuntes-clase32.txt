@@ -1,0 +1,106 @@
+-Optimización (17/07/2024):
+
+Agregaremos una clase para manejo centralizado de errores.
+
+¿Qué tanto de nuestro servidor es necesario para el usuario?
+Hay que tratar de ir setteando nuestro servidor en modo producción.
+
+¿Qué nos garantiza que al momento de entrar en producción y tener miles de usuarios, todo siga andando bien?
+Hay mucho para optimizar.
+
+Empezar a medir tiempos y ver qué conviene para llegar a cierto resultado lógico.
+
+Quizás lo más compacto, no es lo más óptimo.
+
+-Buenas prácticas de optimziación:
+1-Utilizar funciones asíncronas. (Tienen un carácter no bloqueante).
+2-Los console.logs() evitarlos en producción, luego veremos bien cómo loggear.
+3-NODE_ENV=production, express tomará esta variable de entorno para auto-optimizarse en modo producción: Guardar templates de vistas en caché, menos mensajes de error (verbose), etc.
+4-Clusterizar nuestra aplicación (a nivel internet, conjunto de servidores que trabajan de forma organizada). Aprovechar diferentes instancias de la computadora para poder realizar más tareas al mismo tiempo.
+5-Configurar mi servidor para que se reinicie automáticamente. (PM2 por ejemplo, por dentro trabaja con node pero tiene la funcionalidad extra de realizar reinicios automáticos). Generalmente no lo vamos a utilizar, puesto que el propio servicio de hosting utilizará uno de estos servicios. En development no hace falta.
+6-Manejo muy atento de errores con try-catch, error handles y asegurarnos de que no se caiga el servidor. Estandarizar errores. Que no aparezca simplemente un error genérico de Express.
+7-No lo haremos a mano, pero para saber, balanceos de carga; Estrategias de clustering enfocadas a delegar las instancias más complejas a las partes del cluster más capaces. No aleatoriamente.
+8-Compresiones de archivos. No es tan crítico para nuestra api, pero, comprimir archivos en un middleware antes de su respectiva transferencia.
+9-Proxy inverso (Filtra y organiza solicitudes del cliente, por eso es reverse, ya que va en dirección hacia el servidor).
+
+-Compresión:
+
+npm install express-compression
+
+router.get("/longstring", compression() async (req, res) => {
+    try {
+        const base = "Prueba"
+        let string = "";
+        for (let i = 0; i < 10e4; i++) string += base;
+        res.status(200).send({origin: config.SERVER, payload: string});
+    } catch {
+
+    }
+}) // El cliente recibe exactamente lo mismo.
+No puedo simplemente ponerle compresión a todo: Es una carga extra para el servidor.
+Imágenes, textos largos, sí.
+
+Brotli: Alternativa moderna de Google 30% más rápida que Gzip. Otro algoritmo de compresión.
+
+app.use(compression ({
+    brotli: {enabled: true, zlib:{}}
+}));
+Brotli es mucho mejor!
+
+
+router.get("/longstring", compression( {brotli: {enable: true, zlib: {} } }) async (req, res) => {
+    try {
+        const base = "Prueba"
+        let string = "";
+        for (let i = 0; i < 10e4; i++) string += base;
+        res.status(200).send({origin: config.SERVER, payload: string});
+    } catch {
+
+    }
+}) // El cliente recibe exactamente lo mismo.
+
+-Middleware para manejo de errores:
+Necesitaremos:
+-Middleware de recepción de errores.
+-Generador personalizado de errores.
+-Diccionario de errores. (Normalizar TODOS los mensajes de errores).
+
+Podemos tenerlo en services en un archivo o en el config:
+export const errorDictionary = {
+    UNHANDLED_ERROR: {code: 0, status: 500; message: "Error no identificado." },
+    ...
+}
+
+En servicios:
+
+custom.error.class.js:
+
+
+Javascript ya tiene una clase predeterminada para manejo de errores: throw new Error("Error en tal proceso");
+
+export default class CustomError extends Error { // Hereda la clase nativa
+    constructor(typeError, message = "") {
+        super(message); // Invoca al constructor de la clase padre (Error) y le envía el mensaje.
+        this.typeError = typeError;
+
+    }
+
+}
+
+Vamos creando un archivo errors.handler.js en services
+
+(importamos el diccionario)
+export default const errorHandler = (error, req, res, next) => {
+    let customError = errorsDictionary[0]; // Por defecto, el error genérico, el primero.
+    for (const key in errorDictionary) {
+        if (errorsDictionary[key].code === error.type.code) customError =errorsDictionary[key];
+    }
+    return res.status(customError.status).send({origin: config.SERVER, payload: "", error: customError });
+
+}
+
+
+import errorsHandler en app.js
+
+01:34:54
+

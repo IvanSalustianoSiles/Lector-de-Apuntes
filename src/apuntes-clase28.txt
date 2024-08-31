@@ -45,3 +45,5 @@ Repaso de la ruta de trabajo:
 -Antes de llamar al servicio, el controller hace la normalización de la info por medio de DTO.
 
 Nota: Si realizas cambios de variables y en general acciones en el constructor, recordar que es lo primero que se ejecura al sólo crear un nuevo objeto de dicha clase.
+
+Estar preparado para normalizar con DTO todos los parámetros que pase el front o su mayoría.

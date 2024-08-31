@@ -207,7 +207,7 @@ Políticas-Dependen de la empresa
 
 Nosotros abordaremos:
 
--Public: Acceso libre.
+-Public: Acceso libre.S
 -Authenticated: Que cuente con un token de acceso (ej: users, premiums, admins).
 -USER: Usuario común.
 -USER_PREMIUM: Usuario con membresía premium.

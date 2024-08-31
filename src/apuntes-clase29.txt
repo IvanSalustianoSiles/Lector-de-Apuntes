@@ -98,5 +98,8 @@ Generalmente sólo mencionamos la id si vamos a popular, para decir que referenc
 
 -Llama a los modelos en los DAOs (services) y va haciendo endpoints muy genéricos y simples.
 
-01:01:18
+-Agrega los DTOs en los DAOs, por ahora vacíos.
+
+-Copia mongo singleton, lo importa en app y ejectua mongoSingleton.getInstance()
+
 

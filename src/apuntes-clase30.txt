@@ -1,0 +1,161 @@
+Mailing y Mensajería (10/07/2024)
+
+Casos dónde nos interesaría enviarle un mail al usuario:
+-Confirmación de compra (vamos a generar un ticket de compra y enviarle el comprobante)
+-Su registro como usuario
+-(Una idea del profe) cambio de contraseña
+
+-SMTP (Simple Mail Transfer Protocol):
+Protocolo general para envíos de correo.
+Puertos seguros: 25, 26, 587, 465.
+
+-IMAP, POP3, etc...:
+Protocolos para correos entrantes.
+
+-Se harán los controles necesarios para que no nos lleguen correos desde cualquier sitio.
+
+-Delegamos el envío de correos a un servidor SMTP.
+
+Puerto 465/TPC para SMTPs
+
+-Nodemailer:
+Librería que utilizaremos para enviarle la solicitud a un servidor SMTP para que envíe nuestros mails.
+
+Probaremos con gmail, pero puede realizarse desde varios servicios. 
+
+Google no nos permite utilizar nuestra contraseña para configurar Nodemailer, tendremos que solicitar que nos activen una app pasword.
+
+npm install nodemailer
+
+-Trasport o transporte: Una configuración específica de un SMTP.
+
+En las rutas:
+
+import nodemailer
+
+const transport = nodemailer.createTransport({
+    service: "gmail",
+    port: 587,
+    auth: {
+        user: config.GMAIL_APP_USER,
+        pass: config.GMAIL_APP_PASSWORD
+    }
+})
+
+Dentro de un get /email:
+
+const confirmation = await transport.sendMail({
+    from: `Las Chicas <${config.GMAIL_APP_USER}>`, // Esta forma de ingresar nuestro correo permite que no sea visible en la bandeja de entrada.
+    to: "", // ¿A quién? 
+    subject: "", // Asunto
+    html: "" // Cuerpo
+})
+
+Esta cuenta está configurada para no recibir nada: No responder a este correo.
+
+
+¿Y si quisiera enviar un mail con archivos o documentos?
+app.get("/email", async (req, res) => {
+    let confirmation = await transport.sendMail({
+        from: `Las Chicas <${config.GMAIL_APP_USER}>`, 
+        to: "silesivansalustiano@gmail.com",
+        subject: "Mail de ejemplo",
+        html: `<h1>Prueba con imágenes</h1>
+        <img src="cid:img2"/>
+        `,
+        attachments: [{
+            filename: "imagen2.jpg",
+            path:__dirname+"/images/imagen2.jpg",
+            cid: "img2"
+        }]
+    }) 
+})
+
+Manejo de Mensajerías con librería Twilio
+-SMS 
+-Whatsapp
+-Chatbots
+-Etc.
+
+Es pago, pero el free trial nos permite tener 15 dólares de regalo.
+
+HX3888MTXTXZQ6AQARE62LTL
+
+Creamos la cuenta de Tuilio, y rescatamos:
+-ID de cuenta
+-Token
+-Número
+
+-Como mi cuenta es trial, sólo puedo enviarle mensajes a números verificados.
+
+-Los números verificados deben cargarse.
+-No es obligatorio.
+
+También tiene de mail, SendGrid de Tuilio.
+
+npm install twilio
+En algún routes:
+import twilio from "twilio"
+
+const twilioClient = twilio.create({config.TWILIO_SID, config.TWILIO_TOKEN});
+
+En algún endpoint get:
+const confirmation = await twilioClient.messages.create({
+    body: "",
+    from: config.TWILIO_NUMBER,
+    to: "541132874847" // Ponemos su friendly name
+})
+
+Otras alternativas a Twilio:
+-Plivo
+-Vonage
+-Bandwidth
+-Vidyo
+
+Tercera entrega del proyecto final:
+-Patrones de diseño (listo)
+-Variables de entorno (listo)
+-Mailing (listo)
+-Aplicar conceptos de DAO (listo) y DTO (más o menos, idea hasheo de contraseñas)
+-Patrón repository, es decir, usar DAO como intermediario entre los controllers y los models. (listo)
+-Modificar ruta current para no enviar información sensible, sólo la info necesaria en un DTO. Podemos usar el spreader const {password, ...filteredUser} = founduser; (listo)
+-Middleware HandlePolicies para delimitar el acceso a ciertos endpoints:
+-Sólo admin puede crear, actualizar y eliminar productos. (listo)
+-Sólo user puede enviar mensajes al chat.
+-Sólo user puede agregar productos a su carrito. (listo)
+-Nuevo modelo Ticket con: (listo)
+-Id autogenerado (listo)
+-code (String autogenerable y único) // Puedo usar modificador unique de mongoose
+-purchase_datetime (fecha y hora exacta de la compra, un created_at?) // Con datenow recomienda el profe, o moment librería
+-amount (Number, total de la compra)
+-purchaser (String, correo asociado al usuario del carrito)
+
+-Un usuario carga productos a un carrito, pero en algún momento va a querer confirmar la compra: Ahí hay que generar un ticket
+
+-Implementar en carts ruta "/:cid/purchase" para finalizar proceso de compra. (listo)
+-Si el quantity de los productos no supera al stock, todo bien, se resta del stock. Sino, no se agrega el producto al proceso de compra.
+-Si hay stock 0, no se van a poder agregar esos productos al carrito.
+-Si hay stock pero es menor que quantity, agregar los productos que se pudieron y dejar el stock en 0.
+-Si alcanza, se resta y nos lo llevamos.
+-Utilizar el servicio de tickets para poder generar un ticket con los datos de la compra.
+-Dejar en el carrito los productos que no pudieron pasar al ticket.
+-Control de stock tanto al momento de agregar el producto al carrito como al confirmar la compra, pero son cosas separadas.
+
+-Una consulta al modelo de los carritos porque está populado con los productos
+-Con un array de productos del manager de carritos, ir trabajando en memoria y puliendo cómo dejar ese array con los productos que van a ir al ticket?
+-A la vez por cada producto se hará una consulta para actualizar el stock
+
+-Consulta a carrito
+-Ciclo actualizando el array de productos del carrito, se va actualizando en memoria, vamos haciendo el update al stock de cada producto
+Explicación:
+Supongamos que para el primer producto pide 5 (estaría en el quantity del carrito) y stock 8 (en los productos de la populación)
+Actualizo en memoria el array; Ya no va a estar ese producto de 5, lo saco. Consulto a productos y actualizo el stock a 8-5=3
+
+Así con todos los productos.
+
+-Cuando se termina el ciclo, los que había stock pasaron al ticket. Fui calculando el total del ticket. Fui haciendo las consultas a productos para actualizar stock.
+
+-Consulta para actualizar el carrito con el array nuevo en memoria (se van los que pude confirmar).
+-Consulta para generar el ticket
+
+Podemos simplemente hacer o hay suficiente o no.
