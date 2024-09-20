@@ -1,0 +1,147 @@
+Clusters y Escalabilidad (29/07/2024)
+
+El clustering nos permitirá un mejor aprovechamiento del hardware para optimizar nuestro programa.
+
+Acordate de agregar child process! 
+
+Cluster: Conjunto de instancias que trabajan en conjunto.
+
+Trabajando con Artillery, nos dimos cuenta de que las operaciones complejas pueden implicar que muchas peticiones no sean leídas siquiera.
+
+-Estrategia: Promover la Escalabilidad de mi código.
+ 
+-Escalabilidad vertical: Buscar un servidor más potente, mejorar el hardware. (generalmente hardware)
+
+-Escalabilidad horizontal: Dividir las tareas en multi-instancias de servidores, que alojen tareas más complejas. (generalmente software, sobre instancias)
+
+En otras palabras:
+-Que nuestro servidor sea más potente.
+-Delegar complejidad a otros servidores.
+
+El escalamiento horizontal ahorra dinero, puesto que el escalamiento vertical es costoso y muchas veces hay que comprar de antemano requerimientos temporales por si acaso, debido a épocas que de mayor consumo.
+
+1- Escalamiento horizontal, Clusters y nodos
+
+Entonces, el escalamiento horizontal resulta más cotidiano. 
+
+Esta división de multi-tareas se separa en nodos, que a su vez conforman en conjunto al cluster.
+
+-Nodos: Servidores que trabajarán en equipo para resolver tareas complejas.
+
+-Cluster: El conjunto de nodos, unidos por un contexto general.
+
+Cuando necesitemos más recursos, simplemente se agregará más recursos; no es como en el escalamiento vertical donde si querés cambiar una placa madre, debés tirar la vieja.
+
+Recordando child process...
+-Usábamos la función fork()
+-Mandábamos por separado nuestro proceso complejo:
+process.on("message", message => { // Escucha un mensaje, y una vez que lo recibe le envía al objeto process el resultado.
+    let result = 0;
+    for (let i = 0; i <3e9; i++) result += i;
+    process.send(result)
+})
+-Definimos nuestro hijo en la ruta (const child = fork("src/complex.js");)
+-Le envíamos un mensaje para que inicie:
+child.send("start");
+-Escuchamos lo que nos responde cuando termina su proceso, y lo enviamos:
+child.on("message", result => {
+    res.status(200).send({ origin: config.SERVER, payload: result })
+})
+En pocas palabras:
+Delegábamos al hijo, y mientras tanto JS podía seguir atendiendo otras solicitudes, no nos esperaba.
+
+En app.js:
+
+import cluster from "cluster"; (es nativo de node)
+
+
+import { cpus } from "os"; // cpus.length, cantidad de nucleos disponibles.
+
+
+if (cluster.isPrimary) { // Si es la primera instancia, se encarga de crear los workers.
+  for (let i = 0; i < cpus.length; i++) cluster.fork();
+    // Inicializamos cluster
+} else {
+  try {
+    const app = express();
+    ...
+  } catch (error) { 
+    console.log(error.message);
+  }
+}
+
+cluster puede escuchar a los workers y ver si alguno se cae:
+
+if (cluster.isPrimary) {
+  for (let i = 0; i < 2; i++) cluster.fork(); // cpus.length me devuelve cero.
+  cluster.on("exit", (worker, code, signal) => { // Escucho cierres como los de process, pero puedo tomar específicamente al worker que se cerró.
+    console.log(`Instancia ${worker.process.pid} caída.`); // Tomo el pid del proceso específico de ese worker.
+    cluster.fork(); // Agrego una instancia por la que se perdió.
+  })
+} else {
+    ...
+}
+
+-Contenedores con Docker:
+
+Máquinas virtuales: Emula un sistema operativo completo (Virtual Box, por ejemplo)
+
+Dentro de un sistema operativo podemos utilizar otro, virtualizado.
+
+Emula todo, hasta el hardware.
+
+Limitación: El consumo y el espacio. Es un proceso pesado.
+
+-Docker: Tecnología de contenedores y virtualización que no emula todo el sistema completo sino una determinada aplicación.
+(Básicamente un gestor de contenedores)
+
+-Contenedor: Emulador, entonces, de una aplicación particular.
+
+-Su principal elemento es el aislamiento; múltiples contenedores con sus propios entornos no relacionados y no hay problema.
+
+-Livianos, sólo ocupan la virtualización del kernel y no de todo el sistema operativo.
+
+-En una máquina corro entornos separados, con su estructura, lógica y paquetes.
+
+-En un contenedor trabajar con mongo, en otro con MySQL, etc.
+
+-Ahora estamos trabajando con una aplicación monolítica.
+-Podríamos tener una aplicación con microservicios, es decir, dividir en varias aplicaciones dedicadas a conjuntos de tareas específicas; cada uno podría tener un contenedor perfectamente.
+
+-Los contenedores se basan mucho en Linux, en su código.
+
+-Imágen: Archivo del cuál se parte para que el programa pueda crear el contenedor. Necesita saber qué es lo que va a emular.
+
+Si quisiéramos levantar una máquina virtual que replique Windows 95 por ejemplo, necesitaríamos una imagen con todas las configuraciones necesarias. En base a ese modelo, a ese molde, podemos levantar los contenedores.
+
+Correremos una imagen con docker.
+
+Docker hub: Sitio oficial de Docker con imágenes prearmadas que puedo usar para crear mis contenedores.
+
+docker pull <image>: Comando para descargar imágenes. (me lo puede guardar en Desktop)
+
+Quiero probar x tipo de servidor: Descargo su imagen y genero el contenedor.
+
+Podemos crear un docker file y subirlo para tener nuestra propia imagen.
+
+docker-compose: Para correr instancias/servidores más elaborados.
+
+
+En Dockerfile, fuera de src:
+FROM node:20 // Que se fije la imagen oficial de node, versión 20.
+WORKDIR /app // Dentro de la imagen, dónde va a estar la aplicación.
+COPY package*.json ./ // Copia el packagejson
+RUN npm install // Hace un npm install
+COPY . . // Copia todo al nivel de Dockerfile
+EXPOSE 8080 // Exponé en el puerto 8080
+CMD ["node", "--watch", "app.js"] // 
+
+Si Docker diera algún error, saber que debe estar activada la virtualización del hardware desde nuestra BIOS.
+
+Para subir nuestra propia imagen:
+docker build -t dockerlaschicas .
+"-t" nombra a nuestra imagen
+".", todo lo que está al mismo nivel que Dockerfile
+
+
+

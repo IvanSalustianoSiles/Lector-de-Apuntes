@@ -27,7 +27,7 @@ Quizás lo más compacto, no es lo más óptimo.
 
 npm install express-compression
 
-router.get("/longstring", compression() async (req, res) => {
+router.get("/longstring", compression(), async (req, res) => {
     try {
         const base = "Prueba"
         let string = "";
@@ -96,9 +96,15 @@ export default const errorHandler = (error, req, res, next) => {
         if (errorsDictionary[key].code === error.type.code) customError =errorsDictionary[key];
     }
     return res.status(customError.status).send({origin: config.SERVER, payload: "", error: customError });
-
 }
 
+-Habilitar globalmente este middleware.
+
+En otras palabras:
+
+Se ejecuta a la clase, que se extiende de Error, y llama al error del diccionario. 
+
+Al dispararse un error, el middleware lo contempla, y si coincide con el código del diccionario lo retorna; Sino, el error genérico.
 
 import errorsHandler en app.js
 

@@ -1,0 +1,437 @@
+-Documentación de API (12/08/2024):
+
+Es necesario auditar. Sirve para darle un cierto seguimiento a nuestro código, o para introducirnos al código viejo de otra persona o empresa.
+
+-Es probable que a la mayoría no le resulte atractivo documentar.
+
+-Guía para quien no conoce el proyecto.
+
+-Para una API:
+-¿Cuáles son los endpoints?
+-¿En qué formato me devuelven la información?
+-Le sería útil al equipo de Front, por ejemplo.
+-Necesitará x token, etc.
+-Agilizaría mucho el proceso para que el Front no esté constantemente preguntándonos y repreguntándonos las mismas cosas.
+-ChatGPT es un buen complemento para documentar; no el más atractivo.
+-Sirve para cuando se une alguien al equipo.
+-Más fácil heredar código.
+
+Documentar es brindar información suficiente sobre un proceso.
+A nivel simple, documentar puede realizarse meramente haciendo comentarios en el código.
+A nivel complejo, pueden aplicarse herramientas de documentación para el aplicativo en general.
+
+JSDoc, JDoc (Estándares de funciones o rutinas específicas para documentar)
+
+/**
+*
+* @param {number} number Número a redondear
+* @param {number} decimals Cantidad de decimales
+* @returns {number} Número redondeado con decimales fijos
+*\ // Ejemplo de comentario en formato JSDoc para una función
+
+Intellisense (el predictor de texto de VSC) puede leer estos comentarios y prever qué parámetros deberá llevar la función, y qué retornar.
+
+-Swagger: Herramienta de documentación de código.
+
+-Nos ayudará a crear nuestra propia Open API Specification.
+
+npm install swagger-jsdoc swagger-ui-express
+
+-swagger-jsdoc: Para escribir un archivo .yaml o .json y generar un API Doc.
+
+-swagger-ui-express: Para linkear una interfaz gráfica que representará la documentación a partir de una ruta de Express.
+
+Vamos a tener un enrutado dedicado a la documentación.
+
+Al ser un proceso repetitivo, al profe no le interesa demasiado, como sucede con testing. Con que tengamos la documentación de un proceso armada (ej: de users, pero no de products o carts) está bien.
+
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUiExpress from "swagger-ui-express";
+
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.1",
+    info: {
+      title: "Documentación de API 'Las Chicas'",
+      description: "Documentación completa de toda mi API"
+    }
+  },
+  apis: ["./src/docs/**/*.yaml"] // Acá estarán todos los archivos de configuración de ruta
+};
+const specs = swaggerJsdoc(swaggerOptions);
+app.use("api/docs", swaggerUiExpress.serve, swaggerUiExpress.setup(specs)); // En "/api/docs" servimos nuestro pequeño GUI.
+
+Ejemplo de .yaml de users del profe hecho con ChatGPT para la carpeta docs para la librería swagger:
+
+openapi: 3.0.1
+info:
+  title: User API
+  description: API to manage users
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/users:
+    get:
+      summary: Get all users
+      description: Retrieve a list of all users
+      responses:
+        "200":
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  payload:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+  /api/users/{uid}:
+    get:
+      summary: Get user by ID
+      description: Retrieve a specific user by their ID
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          description: ID of the user to retrieve
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  payload:
+                    $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  error:
+                    type: string
+                    example: User not found
+    put:
+      summary: Update user by ID
+      description: Update a specific user by their ID
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          description: ID of the user to update
+          schema:
+            type: string
+      requestBody:
+        description: User data to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: User updated
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  error:
+                    type: string
+                    example: User not found
+    delete:
+      summary: Delete user by ID
+      description: Delete a specific user by their ID
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          description: ID of the user to delete
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: User deleted
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+        pets:
+          type: array
+
+Mi ejemplo de .yaml:
+
+openapi: 3.0.0
+info:
+  title: User API
+  description: API para la gestión de usuarios
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+    description: Servidor local de desarrollo
+paths:
+  /users:
+    get:
+      summary: Obtener usuarios
+      description: Obtiene una lista paginada de usuarios
+      parameters:
+        - name: limit
+          in: query
+          description: Límite de usuarios por página
+          required: false
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: Número de la página
+          required: false
+          schema:
+            type: integer
+        - name: role
+          in: query
+          description: Filtra los usuarios por rol
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  payload:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+    post:
+      summary: Crear un nuevo usuario
+      description: Crea un nuevo usuario (sólo para administradores)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        200:
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  payload:
+                    $ref: '#/components/schemas/User'
+  /users/{id}:
+    put:
+      summary: Actualizar un usuario
+      description: Actualiza la información de un usuario existente (sólo para administradores)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        200:
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  origin:
+                    type: string
+                  payload:
+                    $ref: '#/components/schemas/User'
+    delete:
+      summary: Eliminar un usuario
+      description: Elimina un usuario por ID (sólo para administradores)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Usuario eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  origin:
+                    type: string
+                  payload:
+                    $ref: '#/components/schemas/User'
+
+  /users/restore:
+    post:
+      summary: Restaurar contraseña de un usuario
+      description: Envía un enlace de restauración de contraseña al correo del usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestoreRequest'
+      responses:
+        200:
+          description: Enlace de restauración enviado
+
+  /users/restorecallback:
+    post:
+      summary: Validar cambio de contraseña
+      description: Valida el cambio de contraseña del usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordUpdate'
+      responses:
+        200:
+          description: Contraseña actualizada
+
+  /users/premium/{uid}:
+    post:
+      summary: Cambiar el rol de un usuario
+      description: Cambia el rol de un usuario a 'premium' o 'user' (sólo para administradores)
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Rol actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  origin:
+                    type: string
+                  payload:
+                    type: string
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+    NewUser:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    UserUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+    RestoreRequest:
+      type: object
+      properties:
+        email:
+          type: string
+    PasswordUpdate:
+      type: object
+      properties:
+        password:
+          type: string
+
+Tuve que cambiar la ruta del array apis en app para que me funcionara: 
+apis: ["./docs/**/*.yaml"]
+
+01:23:48

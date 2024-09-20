@@ -1,0 +1,69 @@
+-Orquestación de contenedores (31/07/2024):
+
+Podría reservar algunos núcleos para otros servicios.
+
+Un contenedor es básicamente un emulador, pero no de todo el SO como una máquina virtual,
+Sino sólo de una aplicación.
+
+Docker gestiona contenedores y nos ayuda a rescatar y crear imágenes, que son los modelos de los contenedores.
+
+Docker desktop es a Docker lo que Atlas a MongoDB.
+
+El servicio es Docker, Docker Desktop, una herramienta visual (como Atlas).
+
+Todo lo que hago desde Docker Desktop, lo puedo hacer desde node (docker run, docker images)
+
+Si intentamos crear un contenedor desde Docker Desktop, y le ponemos como variable de entorno el URI de MongoDB, notaremos que todos los nodos dan error, porque es un entorno propio, no puede acceder.
+
+Le damos a run a una imagen
+
+Nombre, port, variable de entorno PORT 8080 para que sepa dónde arrancar,
+Pero ahora la MongoDB URI será la de Atlas
+Ahora corre perfectamente: Estamos efectivamente corriendo nuestra aplicación desde un contenedor, un programa que simula nuestra app.
+Así puedo crear muchos entornos de trabajo a la vez.
+En otras palabras, deben extenderse al exterior de alguna manera.
+
+Un volumen es un área compartida entre distintos contenedores. No lo vamos a ver por tiempo, investigar.
+
+.dockerignore (creamos)
+node_modules
+
+Para poder subir:
+
+docker login - te logeas
+
+docker push <username>/<nombredeimagen>:1.0.0 (le damos una versión)
+docker push ivanssilesdev17/laschicasdocker:1.0.0
+
+push to dockerhub en dockerdesktop
+settings - make public
+
+Importante:
+Subir, bajar y crear imágenes.
+
+-Orquestación de contenedores: Cluster de contenedores
+
+Con kubernetes podemos trabajar dinámicamente los contenedores a diferencia de Docker.
+
+Secuencia de kubernetes:
+-Solicitud del cliente (Llega la solicitud)
+-Balanceador de carga (Balancea las cargas entre los servidores)
+-Pods (El BC define a qué grupo de contenedores)
+-Contenedor (Se termina llegando a un contenedor)
+-Instancia (Nuestra instancia en un entorno específico)
+
+Trabajar con kubernetes:
+1-Instalar kubctl (CLI para ejecutar distintos comandos referentes al cluster)
+2-Instalar minikube (Pequeño servidor local de clusters abierto para probar)
+3-
+
+1-
+Entramos a kubernets.io
+
+Instalamos kubectl, primero instalamos curl para poder instalarlo
+Instalamos choco (ya la tengo)
+Como yo tengo choco:
+choco install kubernetes-cli
+
+2-
+(PENDIENTE, FALTA TIEMPO)

@@ -1,0 +1,22 @@
+-Tercera práctica integradora (05/07/2024):
+
+No voy a hacer un repaso de todo, voy a tomar apuntes de lo que se trata el repaso y finalmente de la entrega.
+
+Más adelante se actualizará estas clases.
+
+(Apunte After)
+
+-Recuperación de contraseñas
+No podemos decirle "tu contraseña era esta", sino darle la posibilidad de que cargue una nueva.
+¿Olvidaste la contraseña?
+
+-Lo llevamos a otra plantilla donde se le pide el mail (/api/users/restore1 según el profe)
+
+-/api/users/restore2
+-Se busca usuario por gmail, si existe-
+-Se genera token de 1 hora (pensar con sessions) (en caso de token es con cookie)
+-Se notifica al usuario por mail que tiene que entrar a restore3
+-Restore3 tiene que depender de si se tiene el token de acceso
+-Si el link expira y está logeado, restore1
+-Si el link expira y no está logeado, login (idea mía)
+

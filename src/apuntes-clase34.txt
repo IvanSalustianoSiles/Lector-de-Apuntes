@@ -1,0 +1,163 @@
+-Logging y Performance (24/07/2024):
+
+Pruebas para revisar el performance.
+
+-npm update: Quedó pendiente de la clase anterior.
+
+Cada tanto corremos npm audit y npm outdate.
+
+-Logging: Registro de procesos y errores, distinto de login (autenticación).
+
+-Winston: La herramienta que nos va a permitir hacer loggers (otra muy buena, Morgan).
+
+Hay que empezar a evitar console.logs para producción.
+
+Un logger no es sólo para errores, pero tampoco es para todo: Cambios fundamentales, como cambiar o borrar cosas principalmente.
+
+npm install winston
+
+-Los console.logs terminan perdiéndose entre una cantidad muy grande de mensajes de consola.
+-Pueden generar un ligero estancamiento si empiezan a volverse varios.
+
+-Transporte: Sistema para almacenar logs. El destino, a dónde los envío (al navegador, a una base de datos, a mi consola, etc.).
+
+-Nivel: Sistema de prioridad para saber si un log tiene la autorización de pasar a un determinado transporte.
+
+Winston nos permite enviar nuestros logs a base de datos, archivos o consola.
+
+Niveles de prioridad de nuestros logs:
+
+{
+    error: 0, // Mayor prioridad a la hora de ser mostrados.
+    warn: 1,
+    info: 2,
+    http: 3,
+    verbose: 4,
+    debug: 5,
+    silly: 6
+}
+
+Cuando un logger se configura en determinado nivel, este es su nivel base, lo que quiere decir que puede acceder a niveles superiores tal vez.
+
+Creamos un winston.js
+
+import winston from "winston";
+import config from "../config.js"
+
+const devLogger = winston.createLogger({
+    transports: [
+        new winston.transports.Console({ level: "verbose" }) // Guardame un transporte, desde verbose hacia arriba.
+    ]
+});
+
+const addLogger = (req, res, next) => {
+    req.logger = devLogger; // Inyectamos nuestro logger con los transportes en req.
+    req.logger.http(`${new Date().toDateString} ${req.method} ${req.url}`); // Esto me dispara un warn. No necesariamente es un error. Puede mostrar warn porque está arriba de verbose.
+
+}
+export default addLogger;
+Lo inicializo como middleware en app antes de las rutas.
+
+const devLogger = winston.createLogger({
+    transports: [
+        new winston.transports.Console({ level: "debug" }), // Por consola debug para arriba
+        new winston.transports.File({ leve: "info", filename: `${config.DIRNAME}/logs/errors.log`}) // En archivo, errores de más jerarquía.
+    ]
+});
+
+-Artillery:
+Me permitará simular usuarios virtuales para ver si mis endpoints soportan el tráfico normal de usuarios de internet.
+
+Se instala de manera global (-g)
+
+npm <library> -v: Me dice si se instaló correctamente (artillery)
+
+
+artillery quick --count 40 --num 50 "http://localhost:8080/api/sessions/simple" -o src/logs/artillery.simple.json
+(40 usuarios, 50 accesos, es decir 2000 accesos)
+
+Interpretando datos del archivo:
+http.codes.200: Cantidad del solicitudes completadas exitosamente.
+vusers.created: Cantidad de usuarios que se crearon.
+
+http_response_time:
+min: 1 (está muy bien)
+max: 138
+mean: 44.4 segundos (medio alta para local). Estamos en valores razonables igual, puesto que en público puede tomar hasta unos 200 milisegundos.
+
+Solución si son lentos: Child process, revisar y aplicar.
+
+Artillery es muy bueno para una etapa inicial de testing.
+
+Archivo yml: (fuera de src, creo)
+Formato estándar para configuraciones.
+Nos puede interesar probar un proceso completo y no sólo un endpoint.
+artillery run config.yml -o src/logs/artillery.advanced.json
+
+-Uno no busca que la máxima sea muy diferente de la mínima
+-Ataco el que tiene los peores números.
+
+
+
+
+import winston from "winston";
+import config from "../config.js"
+
+
+const customLevelOptions = {
+    levels: {
+        fatal: 0,
+        error: 1,
+        warning: 2,
+        info: 3,
+        http: 4,
+        debug: 5
+    },
+    colors: {
+        fatal: "red",
+        error: "orange",
+        warning: "yellow",
+        info: "green", 
+        http: "blue",
+        debug: "white"
+    }
+}
+const prodLogger = winston.createLogger({
+    levels: customLevelOptions.levels,
+    transports: [
+        new winston.transports.Console({ 
+            level: "info",
+            format: winston.format.combine(
+                winston.format.colorize({ colors: customLevelOptions.colors }),
+                winston.format.simple()
+            )
+        }),
+        new winston.transports.File({ 
+            level: "error", 
+            filename: `${config.DIRNAME}/logs/errors.log`,
+            format: winston.format.simple()
+        })
+    
+    ]
+});
+
+const devLogger = winston.createLogger({
+    levels: customLevelOptions.levels,
+    transports: [
+        new winston.transports.Console({ 
+            level: "debug",
+            format: winston.format.combine(
+                winston.format.colorize({ colors: customLevelOptions.colors }),
+                winston.format.simple()
+            )
+        })
+    ]
+});
+
+const addLogger = (req, res, next) => {
+    req.logger = config.MODE == "prod" ? prodLogger : devLogger;
+    req.logger.http(`${new Date().toDateString} ${req.method} ${req.url}`);
+    next();
+};
+
+export default addLogger;

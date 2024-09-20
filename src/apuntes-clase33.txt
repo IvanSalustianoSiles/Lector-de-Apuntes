@@ -1,0 +1,75 @@
+-Versiones y paquetes (22/07/2024):
+
+-NVM: Node Version Managment
+
+Vamos a tener rutinas repetitivas; Podemos crear un paquete.
+
+-Agregar y quitar versiones de Node con NVM.
+-Nos puede interesar una versión específica.
+-Los paquetes de node pueden cambiar según la versión y arruinar la compatibilidad con nuestro código viejo.
+
+LTS: Long Term Service - Versiones que sirven a largo plazo y no tendrán demasiados cambios que puedan descompatibilizar tu código.
+
+Puede que tengamos instaladas incluso de dos a cuatro versiones.
+
+-nvm list: Muestra versiones de node instaladas.
+
+-nvm list available: Versiones disponibles para instalar.
+
+-nvm install 20.15.1: Instala versión.
+
+-nvm use <versión>: Cambiar de versión.
+
+-nvm uninstall <versión>: Desinstalar cierta versión.
+
+Tener cuidado que versión estoy usando! Queda corriendo cierta versión aunque cambie de proyecto.
+
+- Repasando NPM...:
+-npm init: Crea el package-json
+-npm install: Me instala todo lo que haya en el package-json
+
+-npm outdate: Aquellos paquetes que tengo desactualizado
+-npm audit: Observa vulnerabilidades
+-npm audit fix: Intenta corregir vulnerabilidades
+
+-package-lock.json: Árbol completo de dependencias.
+En package.json Tenemos sólo las dependencias de nuestro sistema.
+Nuestras dependencias tienen otras dependencias. El árbol detallado está en package-lock.json.
+NO es imprecindible, pero si queremos hacer una copia perfecta de un proyecto, es necesario; copia fiel.
+
+ci: Clean install
+
+-npm ci: Copia perfecta de otro código, precisa del package lock; mucho más detallado que npm install, que toma del package json convencional.
+
+-Versionado semántico: (o sistema de versionado semántico)
+"express": "^4.19.2"
+Major:4 (completa)
+Minor: 19 (revisión menor)
+Patch: 2 (un bug, un detalle mínimo)
+Es probable que ante un cambio de versión major haya que cambiar cosas de nuestro código, varias cosas pueden quedar obsoletas.
+^: Cualquier actualización de patch y minor.
+simbolo de ñ: Sólo minor
+
+Hay tres gestores principales de Node:
+-npm
+-yarn
+-pnpm
+
+Regla simple: No mezclar gestores en el mismo proyecto.
+https://pnpm.io/installation
+https://yarnpkg.com/getting-started/usage
+
+npm audit --json te viene en formato json la auditoría de tus vulnerabilidades.
+
+npm audit fix --force, corrección más rígida.
+
+Si nos vemos obligados a agregar un --force, probablemente tengamos que modificar alguna rutina de nuestro código para que todo siga funcionando con normalidad luego.
+
+npm.js.com
+Registrarme, ir a packages para subir un paquete.
+
+En el código...
+npm login 
+npm publish --access public
+
+Por ejemplo utils con el manejo de contraseñas de bcrypt.

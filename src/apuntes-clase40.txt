@@ -1,0 +1,128 @@
+-Testing unitario (14/08/2024):
+
+Archivos de testing: Código normal JS diseñado para probar funcionalidades.
+
+Instalar chai y mocha
+
+Objetivo esencial: Evitar errores en producción.
+
+-Captar errores antes, llegar a la etapa final lo más pulidos posibles.
+
+-Testing unitario: Hacer testing para una rutina específica.
+
+-Mocha: Herramienta que leerá nuestro testing y nos permitirá hacer un análsiis estadístico con resultados.
+
+Estará en dev dependencies, porque no nos interesa tenerlo colado en producción.
+
+-Assert: Módulo nativo de NodeJS que nos permitirá hacer validaciones asertivas sobre distintos procesos.
+
+Escribir "file.test.js"
+
+-Describe: Función contenedora de distintos contextos de testeo, podemos tener todos los contextos que queramos mientras tengas intenciones distintas.
+
+-it: Unidad mínima del testing, en ella se define qué acción se está realizando y cuál es el resultado esperado.
+
+Ejemplo:
+
+import Assert from "assert";
+import mongoose from "mongoose";
+import UserMDBService from "../src/services/user/user.mdb.dao.js";
+import config from "../src/config.js";
+
+const connection = mongoose.connect(config.MONGO_URI);
+const assert = Assert.strict;
+const testUser = { first_name: "Jerry", last_name: "Smith", password: "Coki2011", email: "jerrysmith@gmail.com" };
+
+
+describe("Test DAO-MDB Service", function() {
+    before(function() {}); // Se ejecuta antes de comenzar a leer el paquete de test.
+    beforeEach(function() {}); // Se ejecuta antes de cada it
+    after(function() {}); // Luego del final del test
+    afterEach(function() {}); // Luego de cada test
+    it("", async function() {});
+})
+
+Ejemplo de it:
+
+it("paginateUsers() | Debe retornar un array de usuarios", async function() {
+    const result = UserMDBService.paginateUsers();
+    assert.strictEqual(Array.isArray(result), true);
+});
+
+mocha test/user.mdb.dao.test.js
+
+it("save() | Debe retornar un array de usuarios", async function() {
+    const result = await UserMDBService.save();
+    assert.strictEqual(typeOf(result), "object"); // Debe ser un objeto
+    assert.ok(result._id) // Debe tener id
+    assert.deepStrictEqual(result.pets, []) // propiedad interna que debe ser un array;
+
+});
+
+Mi mdb de ejemplo:
+describe("Test DAO-MDB Service", function() {
+    before(function() {});
+    beforeEach(function() {});
+    after(function() {});
+    afterEach(function() {});
+    it("addUser() | Debe retornar el objeto del usuario agregado", async function() {
+        const result = await UserMDBService.addUser(testUser);
+        assert.strictEqual(typeof(result), "object");
+        assert.ok(result._id);
+    });
+    it("getAllUsers() | Debe retornar un array de usuarios", async function() {
+        const result = await UserMDBService.getAllUsers();
+        assert.strictEqual(Array.isArray(result), true);
+    });
+    it("findUserByEmail() |  Debe retornar el objeto del usuario encontrado por email", async function() {
+        const result = await UserMDBService.findUserByEmail(testUser.email);
+        testUser._id = result._id;
+        assert.strictEqual(typeof(result), "object");
+        assert.ok(result._id);
+        assert.deepStrictEqual(result.email, testUser.email);
+    });
+    it("findUserById() | Debe retornar el objeto del usuario encontrado por ID", async function() {
+        const id = testUser._id;
+        const result = await UserMDBService.findUserById(id);
+        assert.strictEqual(typeof(result), "object");
+        assert.ok(result._id);
+        assert.deepStrictEqual(result._id, id);
+    });
+    it("updateUser() | Debe retornar el objeto del usuario actualizado", async function() {
+        const updateName = "Johnny";
+        const result = await UserMDBService.updateUser({ email: testUser.email }, { first_name: updateName });
+        assert.strictEqual(typeof(result), "object");
+        assert.ok(result._id);
+        assert.deepStrictEqual(result.first_name, updateName);
+    });
+    it("paginateUsers() | Debe retornar un objeto con docs, limit y page mínimo", async function() {
+        const result = await UserMDBService.paginateUsers();
+        assert.strictEqual(typeof(result), "object");
+        assert.ok(result.limit);
+        assert.ok(result.page);
+        assert.deepStrictEqual(Array.isArray(result.docs), true);
+    });
+    it("deleteUser() | Debe retornar el objeto del usuario eliminado", async function() {
+        const deleteName = "Johnny";
+        const result = await UserMDBService.deleteUser({ first_name: deleteName });
+        assert.strictEqual(typeof(result), "object");
+        assert.ok(result._id);
+        assert.deepStrictEqual(result.first_name, deleteName);
+    });
+});
+
+Ahora con chai:
+
+const expect = chai.expect;
+
+expect(result).to.be.an("array"); 
+
+Ejemplo mío:
+
+it("deleteUser() | Debe retornar el objeto del usuario eliminado", async function() {
+    const deleteName = "Johnny";
+    const result = await UserMDBService.deleteUser({ first_name: deleteName });
+    expect(result).to.be.an("object");
+    expect(result._id).to.be.not.null;
+    expect(result.first_name).to.be.deep.equal(deleteName);
+});

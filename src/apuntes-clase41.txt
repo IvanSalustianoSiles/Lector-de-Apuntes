@@ -1,0 +1,60 @@
+-Testing Avanzado (19/08/2024):
+
+Vamos a agregar testing de integración (probar secuencias)
+
+Tipos fundamentales de testing:
+-Unitario: Funcionalidades o rutinas específicas (como la clase anterior)
+-Integrado o de integración: Funcionalidades específicas trabajando juntas en una secuencia.
+-E2E: Extremo a Extremo o End to End, una secuencia completa, inclusive desde el Front a veces.
+
+to.match de Chai: Para validar expresiones regulares
+
+expect(x).to.match(regularexpresion)
+
+-Testing de caracter funcional: Algunos lo consideran parte del testing de integración. Consiste en evaluar una rutina compleja orientada al aspecto funcional, evaluar una funcionalidad completa; Algunos lo llaman un "super test de integración".
+
+-Supertest: Librería que nos ayudará a hacer testing integrado no tan a mano.
+
+npm install -D supertest (-D para instalar dependencias en modo development)
+
+Recomendación: Tener activas dos terminales.
+-Una terminal para ejecutar el servidor y dejarlo escuchando.
+-Otra para ejecutar el comando test las veces que sea necesario.
+
+Necesitamos dejar la aplicación corriendo debido a que vamos a llamar a un endpoint.
+
+En un archivo supertest.test.js:
+
+import chai from "chai";
+import supertest from "supertest";
+
+const expect = chai.expect();
+const requester = supertest("http://localhost:8080"); // Para hacerle solicitudes a los endpoints.
+
+_body: Nos devolverá la respuesta del requester.
+
+
+describe("Test Integración Users", function() {
+    before(function() {});
+    beforeEach(function() {});
+    after(function() {});
+    afterEach(function() {});
+    it("POST api/auth/register | Debe registrar un nuevo usuario", async function() {
+        const { _body } = await requester.post("/api/auth/register").send(testUser); // Básicamente, es como si fuéramos el front enviando una solicitud POST (emula un fetch)
+        expect(_body).to.be.undefined; // espero que el body de mi respuesta sea undefined, no null porque espero que directamente no exista (yo no espero nada de la propiedad payload, puesto que mi endpoint sólo hace una redirección).
+    });
+
+    El login del profe (el mío va a ser diferente porque no uso cookies acá, pero lo anoto porque es interesante):
+
+    it("POST api/auth/login | Debe loguear un nuevo usuario", async function() {
+        const result = await requester.post("/api/auth/register").send(testUser);
+        const cookieData = result.headers[0];
+        const cookie = { name: cookieData.split("=")[0], value: cookieData.split("=")[1] };
+    });
+
+        it("GET api/auth/logout | Debe desloguear a un usuario y redireccionar a login", async function() {
+        const { statusCode, _body } = await requester.get("/api/auth/logout")
+        .expect("Location", "/login");
+        expect(_body).to.be.undefined;
+        expect(statusCode).to.be.equals(200);
+    });
