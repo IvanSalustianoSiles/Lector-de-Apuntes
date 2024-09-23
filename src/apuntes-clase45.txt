@@ -1,0 +1,34 @@
+-Product Cloud: Despliegue de nuestra aplicación (02/09/2024):
+
+No es necesario esperar hasta último momento para el deploy.
+
+Generalmente, las etapas de desarrollo de aplicaciones son las siguientes:
+
+1- Etapa de desarrollo: 
+Muchas cosas que funcionan y que no.
+Gran paquete de ideas, no tan pulido.
+
+2- Etapa de QA:
+Roles generalmente divididos de trabajo.
+Aseguramiento de calidad.
+Se encarga de confirmar que todo esté bien.
+Verifica el cómo, no el por qué.
+
+3- Etapa productiva:
+El aplicativo se enfrenta a clientes y problemas reales.
+
+-Pasar el aplicativo: Se refiere a ir pasando funcionalidades entre diferentes stages (como ramas de GitHub) hasta llegar al stage productivo, la rama main.
+
+Decimos "deploy" porque es más que una copia de archivos, requiere varias configuraciones.
+
+Herramientas de despliegue de calibre empresarial (importante para el mundo laboral):
+-Google Cloud
+-AWS
+-Azure
+
+Mejores alternativas para aplicaciones pequeñas:
+-Railway (Muy cómoda, pero no explotar demasiado porque deja de ser gratuita)
+-Render (Único problema, si pasó algo de tiempo en desuso costará volver a iniciar la aplicación)
+-Vercel
+
+54:21

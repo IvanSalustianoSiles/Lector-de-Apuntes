@@ -1,0 +1,3 @@
+-Frameworks de desarrollo: NEST js I (21/08/2024):
+
+NEST es meramente informativo para el proyecto final. Por cuestiones de tiempo por ahora voy a saltear el desarrollo del código de esta y la siguiente clase junto con sus apuntes, luego volveré para apuntar y aprender de forma más llevadera.

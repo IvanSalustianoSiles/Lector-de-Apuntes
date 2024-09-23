@@ -1,0 +1,11 @@
+-Cuarta práctica integradora (28/08/2024):
+
+Consigna / tips
+
+-Mover ruta /api/users/premium/:uid (listo)
+
+Agregar al modelo de users:
+-Una nueva propiedad "documents" que será un array con objetos con 
+"name", String de nombre del documento
+"reference", String enlace al documento.
+-Una propiedad "last_connection", que se modifica cada vez que el usuario hace un login y un logout.

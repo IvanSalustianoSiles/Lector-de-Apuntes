@@ -435,3 +435,6 @@ Tuve que cambiar la ruta del array apis en app para que me funcionara:
 apis: ["./docs/**/*.yaml"]
 
 01:23:48
+
+En algunos otros entornos de trabajo (no Node) es común que la documentación se maneje automáticamente.
+

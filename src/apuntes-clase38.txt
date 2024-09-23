@@ -1,0 +1,119 @@
+Seguridad (07/08/2024)
+
+-A medida que crece el proyecto, crece la necesidad de un equipo de seguridad.
+
+-El riesgo jamás será cero.
+
+-No es para tener miedo; sino respeto. Se corrige y se sigue.
+
+-Vulnerabilidad: En el mundo IT, es básicamente cualquier tipo de debilidad o brecha dejada en nuestro sistema.
+
+No vamos a ser expertos en ciberseguridad, es un ámbito específico.
+
+Un error indirecto, como de análisis o procedimiento, puede exponer una parte de nuestro servicio a la que no se debería poder acceder.
+
+1- Tipos de vulnerabilidades
+
+-De hardware: La implicación de seguridad se da en un elemento físico.
+
+-De software: La implicación de seguridad se da en el aplicativo.
+
+-Procedimentales: La implicación de seguridadd se da en el mismo proceso de resolución.
+
+-Humanas: La implicación de seguridad se da mediante una persona o un usuario. (errores humanos).
+
+2- OWASP (Open Web Aplication Security Project)
+
+-Proyecto orientado a rastraer vulnerabilidades, generalmente en el ámbito fullstack. Genera una estadística de ellas.
+
+-Tiene algunas herramientas de control y verificación que podríamos utilizar.
+
+Algunos elementos que podremos encontrar en OWASP:
+
+-OWASP ZAP: Proxy para hacer testing entre aplicaciones que queramos probar y el navegador.
+
+-OWASP Juice Shop: Aplicativo de prueba con vulnerabilidades, con retos de búsqueda y explotación para detectar vulnerabilidades.
+
+-OWASP Testing Guide: Guía sobre cómo testear tu aplicación web depurando poco a poco vulnerabilidades.
+
+3- Vulnerabilidades frecuentes:
+
+-Broken Access Control: Cuando se logra acceder a una parte del aplicativo a la cuál no se debería tener acceso (ej, un usuario sigue navegando aunque su token jwt o su session haya expirado).
+
+-Cryptographic Failures: Cuando se usa de manera descuidada un proceso criptográfico, sea porque una librería de encriptación se nos queda obsoleta, porque no sabemos mucho de seguridad y encriptamos vagamente una clave nosotros, etc.
+
+-Injection: Insersión de información por parte del usuario con el fin de romper una consulta y generalmente acceder a información sensible.
+
+El usuario inserta algo a la consulta que yo no espero, y devuelvo algo que no debería devolver (lo más común es una SQL injection, por ejemplo)
+
+Ejemplo (injection no SQL, mongoose):
+
+El usuario ingresa su id `$ne:${null}`
+
+Yo traigo su id y hago un getOne, para intentar traer su usuario
+
+getOne({_id: "$ne": null }) (es un ejemplo, no del todo cierto ya que primero probablemente cómo el usuario escriba su ID mal intencionada depende de dónde la ingrese, y segundo, mongoose contempla esto, pero es para que se entienda el concepto en sí).
+
+Ahora estaríamos trayendo todos los usuarios de ID distinta de null, es decir, todos los usuarios!
+
+Ejemplo SQL:
+
+SELECT * FROM users WHERE _id = $id
+
+En vez de $id...
+
+SELECT * FROM users WHERE _id = 1 ; SELECT * FROM users,
+
+Le pasamos un 1, luego un punto y coma para separar otra sentencia en la misma línea, y así le terminamos pidiendo al programa otra consulta, pero ahora devolviéndome todos los usuarios sin filtrar.
+
+-Insecure design: Contraseña en texto plano expuesta, stock negativo, etc.
+(Arreglar valores que sólo pueden ser positivos)
+
+-Security misconfiguration: Mala configuración de seguridad, en nuestro caso del CORS.
+
+-Vulnerable and outdated components: Cuando un componente externo o interno se vuelve obsoleto o mantiene una vulnerabilidad que no fue subsanada. En el caso de node, npm audit fix
+
+-Identification and Authentication failures: Se permite que el usuario fuerce una autenticación o acceda a información tratada de manera errónea, por ejemplo, brute force access, o un mal sistema de contraseña olvidada que deja pasar al usuario.
+
+Solución general: Que el usuario sólo pueda intentar una cierta cantidad de veces.
+
+Podríamos usar req.limiter con Express (luego lo vemos bien)
+
+Se aplicaría como middleware (esta ruta tiene un limitador activo)
+
+-Software and Data Integrity failures: Heredamos la vulnerabilidad de un tercero (integridad de servicios externos)
+
+-Logging and monitoring failures: Cuando no tenemos un sistema eficente de logging (mejorar el mío)
+
+-Server Side Request Forgery (SSRF): El servidor no valida la URL que ingresa el usuario correctamente, y este puede acceder a un recurso remoto.
+
+Volviendo a lo de req.limiter para evitar brute force...
+
+import { RateLimiter } from "express-rate-limiter-core";
+
+const rateLimiter = new RateLimiter({
+    windowMs: 15 * 60 * 1000, // Ventana de quince minutos
+    maxRequests: 100 // 100 Solicitudes como máximo por ventana por IP
+});
+
+app.use(rateLimiter.middleware()); (En este caso está aplicado de forma global, podemos aplicarlo por ruta)
+
+Vamos a ver ejemplos de errores que pueden desencadenar en vulnerabilidades.
+
+1-La password en el html (handlebars, en este caso) no tiene aclarado un type=password, por ende, estará visible.
+
+2-En la ruta de registro, llega el req.body, no hacemos ningún proceso de validación y pusheamos el usuario.
+
+3-Sería mejor no tener hardcodeado el puerto. (Usar un config.js es más seguro, básicamente).
+
+4-Falta lo de CORS, para determinar el acceso a mi API.
+
+5-En el registro no estamos chequeando que el mail sea único.
+
+6-No debemos dejar código residual; más allá de si alguna vez hicimos alguna prueba.
+
+
+
+
+
+
