@@ -31,4 +31,29 @@ Mejores alternativas para aplicaciones pequeñas:
 -Render (Único problema, si pasó algo de tiempo en desuso costará volver a iniciar la aplicación)
 -Vercel
 
-54:21
+Vamos a estar enlazando un repositorio a un servicio.
+
+-Creo cuenta de railway. 
+-Voy a railway.app/new y hago deploy con GitHub.
+-Poner en nuestros "scripts" "start": "node src/app.js"
+
+git checkout -b nombrederama
+git push origin nombrederama
+
+Estructura necesaria de vistas para compra:
+
+Empiezo, iniciar sesion, registrarse (listo)
+Productos - botón para ir a mi perfil y a mi carrito (listo)
+Agregar al carrito, que funcione (listo)
+Mi carrito - botón para ir a productos y a perfil, finalizar compra (listo)
+Mi perfil - botón para ir a carrito, a productos, cerrar sesión y a documentos (listo, no docs)
+Login (y ghlogin) - Registro y cambio de contraseña (listo)
+Register - Login (listo)
+
+-Deploy
+-Arreglar mensajes de error y loggers
+-Arreglar orden de middlewares y siempre role 
+-Cambiar new dates por req.date
+-Revisar cambio de contraseña
+-Revisar chat
+-Revisar todos los métodos para mdb y fs 
